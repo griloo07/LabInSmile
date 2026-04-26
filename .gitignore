@@ -1,0 +1,33 @@
+# --- Dependências ---
+/vendor/
+node_modules/
+
+# --- Configurações Sensíveis (IMPORTANTE) ---
+# Nunca envies passwords da base de dados ou chaves de API
+.env
+.env.local
+config.local.php
+config/db.php
+
+# --- Ficheiros Temporários e Logs ---
+*.log
+/tmp/
+/cache/
+/logs/
+
+# --- Uploads de Utilizadores ---
+# Ignora ficheiros enviados por utilizadores para não encher o repo
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# --- Sistema Operativo e IDEs ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# --- Compilação (se usares SASS/Webpack/Vite) ---
+/public/build/
+/public/dist/
+.sass-cache/
