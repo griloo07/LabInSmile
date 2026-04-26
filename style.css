@@ -1,0 +1,209 @@
+:root{
+    --bg: #f7f9fb;
+    --surface: #ffffff;
+    --text: #111111;
+    --muted: #6b7280;
+    --primary: #0b6e4f;
+    --primary-700: #0a5a41;
+    --dark: #1f2937;
+    --accent: rgba(11,110,79,0.08);
+    --radius: 12px;
+    --shadow-sm: 0 4px 12px rgba(16,24,40,0.06);
+    --shadow-md: 0 10px 30px rgba(16,24,40,0.08);
+}
+
+*{box-sizing: border-box}
+html,body{height:100%}
+body{
+    margin:0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+}
+
+header{
+    background:var(--surface);
+    border-bottom:1px solid #e9eef2;
+    position:sticky;top:0;z-index:1000;
+    box-shadow: var(--shadow-sm);
+}
+
+.container{max-width:1100px;margin:0 auto;padding:1cm}
+header .container{padding:8px 1cm}
+
+.topbar{display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--primary);font-size:1rem}
+.logo img{height:30px;width:auto;border-radius:10px;object-fit:cover}
+
+nav{display:flex;gap:8px}
+nav a{color:var(--text);text-decoration:none;padding:8px 12px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:0.2px;transition:all .18s ease}
+nav a:hover{background:var(--accent);color:var(--primary)}
+
+.top-right{display:flex;align-items:center;gap:18px;margin-left:auto}
+
+.auth-buttons{display:flex;gap:10px;align-items:center}
+.btn-login{background:transparent;color:var(--primary);padding:8px 12px;border-radius:10px;border:1px solid rgba(11,110,79,0.06);font-weight:700;font-size:15px;cursor:pointer;transition:all .18s}
+.btn-login:hover{background:var(--accent);color:var(--primary)}
+.btn-login.primary{background:linear-gradient(180deg,var(--primary),var(--primary-700));color:white;border:none;box-shadow:var(--shadow-sm)}
+.btn-admin{background:var(--dark);color:#fff;padding:8px 12px;border-radius:10px;text-decoration:none}
+
+main{min-height:calc(100vh - 300px);padding-bottom:32px}
+
+footer{
+    background:#0b0b0b;
+    color:#fff;
+    padding:18px 12px 12px;
+    text-align:center;
+    font-size:14px;
+    line-height:1.6
+}
+footer p{margin:6px 0;color:#e6e6e6}
+footer strong{color:#ffffff;font-weight:700}
+
+/*  BOTÃO ORÇAMENTO */
+.btn-orcamento {
+    display: inline-block;
+    margin-top: 20px;
+    background: #0b6e4f;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+}
+.btn-orcamento:hover {
+    background: #0a5a41;
+}
+
+/* 🔥 FORMULÁRIO ORÇAMENTO */
+.form-orcamento {
+    background: var(--surface);
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+    max-width: 500px;
+    margin: 30px auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.form-orcamento input,
+.form-orcamento textarea {
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.form-orcamento textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-orcamento button {
+    background: var(--primary);
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.form-orcamento button:hover {
+    background: var(--primary-700);
+}
+
+/* Labels and alerts used by contact and product forms */
+label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text);
+}
+
+.form-orcamento input:focus,
+.form-orcamento textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 6px rgba(11,110,79,0.06);
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+.alert-error {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+.alert-success {
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    color: #059669;
+}
+.alert ul { margin: 0; padding-left: 20px; }
+.alert li { margin: 5px 0; }
+
+/* Product page styles */
+.product-grid { display: grid; grid-template-columns: 1fr 420px; gap: 28px; align-items:start; }
+.product-image { background: var(--surface); padding: 18px; border-radius: 12px; box-shadow: var(--shadow-sm); }
+.product-image img { width:100%; height:auto; border-radius:8px; cursor: zoom-in; }
+.product-details { background: var(--surface); padding: 20px; border-radius: 12px; box-shadow: var(--shadow-sm); }
+.product-price { font-size: 22px; color: var(--primary); font-weight: 800; margin-top: 10px; }
+@media (max-width: 900px) { .product-grid { grid-template-columns: 1fr; } }
+
+/* Simple image modal */
+.img-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:2000; }
+.img-modal img { max-width:90%; max-height:90%; border-radius:8px; box-shadow:var(--shadow-md); }
+
+/* Contact form shared styles (copied from contacto.php) */
+.contact-form {
+    background: var(--surface);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.contact-form h3 { color: var(--primary); margin-top: 0; }
+.contact-form label { display: block; font-weight: bold; margin-bottom: 6px; color: var(--text); }
+.contact-form input, .contact-form textarea { width:100%; padding:10px; margin-bottom:16px; border:1px solid #e5e7eb; border-radius:6px; font-family: inherit; }
+.contact-form input:focus, .contact-form textarea:focus { outline:none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(11,110,79,0.1); }
+.contact-form button { background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: bold; cursor:pointer; width:100%; }
+.contact-form button:hover { background: var(--primary-700); transform: translateY(-2px); }
+
+/* Force stacked labels and full-width rounded inputs in the product/contact form */
+.contact-form .form-orcamento {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.contact-form .form-orcamento label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text);
+}
+.contact-form .form-orcamento input,
+.contact-form .form-orcamento textarea {
+    width: 100%;
+    display: block;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.contact-form .form-orcamento textarea { resize: vertical; }
+.contact-form .form-orcamento button {
+    border-radius: 10px;
+    padding: 12px;
+}
