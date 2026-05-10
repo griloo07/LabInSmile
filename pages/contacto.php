@@ -277,22 +277,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
                 <h3>Informações de Contacto</h3>
                 
                 <div class="info-item">
-                    <strong>📞 Telefone</strong>
+                    <strong>Telefone</strong>
                     <a href="tel:+351967544606" style="color: #0b6e4f; text-decoration: none;">+351 967 544 606</a>
                 </div>
                 
                 <div class="info-item">
-                    <strong>📧 Email</strong>
+                    <strong>Email</strong>
                     <a href="mailto:labinsmile@gmail.com" style="color: #0b6e4f; text-decoration: none;">labinsmile@gmail.com</a>
                 </div>
                 
                 <div class="info-item">
-                    <strong>📍 Morada</strong>
+                    <strong>Morada</strong>
                     <p style="margin: 5px 0;">Avenida da República, Nº 74<br>1.º Andar Sala 1<br>Paredes</p>
                 </div>
 
                 <div class="info-item">
-                    <strong>🕒 Horário</strong>
+                    <strong>Horário</strong>
                     <p style="margin: 5px 0;">Segunda a Sexta<br>9:00 - 18:00</p>
                 </div>
             </div>

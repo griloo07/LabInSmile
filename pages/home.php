@@ -50,60 +50,47 @@ if (!isset($_SESSION['csrf_token'])) {
 
     <section class="why-choose-us">
         <div class="container">
-            <h2>📋 Porquê Escolher a LabInSmile</h2>
-            <div class="expertise-grid">
-                <div class="expertise-card">
-                    <p class="description">Experiência de anos na indústria de próteses dentárias</p>
-                </div>
-                <div class="expertise-card">
-                    <p class="description">Equipamento de última geração e atualizado regularmente</p>
-                </div>
-                <div class="expertise-card">
-                    <p class="description">Equipa de profissionais altamente qualificados</p>
-                </div>
-                <div class="expertise-card">
-                    <p class="description">Atenção ao detalhe em cada projeto</p>
-                </div>
-                <div class="expertise-card">
-                    <p class="description">Prazos de entrega justos e confiáveis</p>
-                </div>
-                <div class="expertise-card">
-                    <p class="description">Suporte total ao cliente durante o processo</p>
-                </div>
-                <div class="expertise-card">
-                    <p class="description">Materiais premium de fornecedores conhecidos</p>
-                </div>
-                <div class="expertise-card">
-                    <p class="description">Garantia de satisfação nos trabalhos realizados</p>
+            <div class="why-box">
+                <h2>Porquê Escolher a LabInSmile</h2>
+                <div class="expertise-grid">
+                    <div class="expertise-card">
+                        <p class="description">Experiência de anos na indústria de próteses dentárias</p>
+                    </div>
+                    <div class="expertise-card">
+                        <p class="description">Equipamento de última geração e atualizado regularmente</p>
+                    </div>
+                    <div class="expertise-card">
+                        <p class="description">Equipa de profissionais altamente qualificados</p>
+                    </div>
+                    <div class="expertise-card">
+                        <p class="description">Atenção ao detalhe em cada projeto</p>
+                    </div>
+                    <div class="expertise-card">
+                        <p class="description">Prazos de entrega justos e confiáveis</p>
+                    </div>
+                    <div class="expertise-card">
+                        <p class="description">Suporte total ao cliente durante o processo</p>
+                    </div>
+                    <div class="expertise-card">
+                        <p class="description">Materiais premium de fornecedores conhecidos</p>
+                    </div>
+                    <div class="expertise-card">
+                        <p class="description">Garantia de satisfação nos trabalhos realizados</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="features">
-        <div class="container full-width">
-            <div class="features-inner-grid">
-                <div class="feature">
-                    <h3>🎯 Precisão</h3>
-                    <p>CAD/CAM e modelação digital para resultados perfeitos</p>
-                </div>
-                <div class="feature">
-                    <h3>✨ Qualidade</h3>
-                    <p>Controlo rigoroso e materiais premium selecionados</p>
-                </div>
-                <div class="feature">
-                    <h3>🤝 Profissionalismo</h3>
-                    <p>Experiência e dedicação em cada projeto</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- Seção de tópicos removida conforme pedido (Precisão, Qualidade, Profissionalismo) -->
 
     <section class="cta-section">
         <div class="container">
-            <h2>Próteses Dentárias Personalizadas</h2>
-            <p>Qualidade, precisão e acabamento artesanal com tecnologia avançada</p>
-            <a href="contacto.php" class="btn-primary">Pedir Orçamento</a>
+            <div class="cta-box">
+                <h2>Próteses Dentárias Personalizadas</h2>
+                <p>Qualidade, precisão e acabamento artesanal com tecnologia avançada</p>
+                <a href="contacto.php" class="btn-orcamento">Pedir Orçamento</a>
+            </div>
         </div>
     </section>
 </main>

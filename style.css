@@ -207,3 +207,36 @@ label {
     border-radius: 10px;
     padding: 12px;
 }
+
+/* Fundo estático usado na home (classe aplicada ao body em home.php) */
+.has-bg{
+    background-image: url('images/fundo estatico.jpeg');
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+/* Caixa para o CTA de pedir orçamento */
+.cta-box{
+    background: var(--surface);
+    padding: 28px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    max-width: 920px;
+    margin: 24px auto;
+    text-align: center;
+}
+.cta-box h2{margin-top:0}
+
+/* Caixa para a secção "Porquê escolher" */
+.why-box{
+    background: var(--surface);
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin: 18px 0;
+}
+.why-box h2{margin-top:0}
+.why-box .expertise-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.expertise-card{background:transparent;padding:8px;border-radius:8px}

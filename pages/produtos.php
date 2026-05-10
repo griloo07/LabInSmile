@@ -42,6 +42,7 @@ require_once __DIR__ . '/../database.php';
             color: #0b6e4f;
             cursor: pointer;
         }
+        .muted-small{ font-size:12px; color:#6b7280 }
         nav {
             display: flex;
             gap: 5px;
@@ -124,25 +125,29 @@ require_once __DIR__ . '/../database.php';
             nav a { flex: 1; text-align: center; }
         }
     </style>
+<!-- Botão Gestão movido para o nav (ver mais abaixo) -->
 </head>
 <body>
 
 <header>
     <div class="container">
         <div class="topbar">
-            <a href="home.php" class="logo" style="text-decoration: none; color: #0b6e4f;">LabInSmile</a>
+            <a href="home.php" class="logo">LabInSmile</a>
 
-            <div style="display: flex; align-items: center; gap: 20px; margin-left: auto; width: 100%; justify-content: flex-end;">
+            <div class="top-right">
                 
                 <nav>
-                    <a href="produtos.php" style="color: #0b6e4f; font-weight: bold;">Produtos</a>
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                        <a href="admin.php">Gestão</a>
+                    <?php endif; ?>
+                    <a href="produtos.php">Produtos</a>
                     <a href="especialidades.php">Especialidades</a>
                     <a href="contacto.php">Contacto</a>
                 </nav>
 
                 <div class="auth-buttons">
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <span style="font-size: 14px; color: #6b7280;">
+                        <span class="muted-small">
                             Olá, <?= htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']) ?>
                         </span>
                         <a href="logout.php" class="btn-login">Sair</a>
@@ -172,9 +177,8 @@ require_once __DIR__ . '/../database.php';
             while ($row = $result->fetch_assoc()) {
         ?>
 
-            <a href="produto.php?id=<?= $row['id'] ?>" style="text-decoration:none; color:inherit;">
-    <div class="service-card">
-        <h3>🦷 <?= htmlspecialchars($row['nome']) ?></h3>
+                <a href="produto.php?id=<?= $row['id'] ?>" style="text-decoration:none; color:inherit; display:block;">
+            <div class="service-card">
 
         <?php if (!empty($row['imagem'])): ?>
             <img src="/laboratorio/images/<?= htmlspecialchars($row['imagem']) ?>">
