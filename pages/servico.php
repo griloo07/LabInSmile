@@ -7,7 +7,7 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 
 if (!isset($_GET['id'])) {
-    die("Produto não encontrado.");
+    die("Serviço não encontrado.");
 }
 
 $id = intval($_GET['id']);
@@ -16,10 +16,10 @@ $sql = "SELECT * FROM services WHERE id = $id";
 $result = $conn->query($sql);
 
 if (!$result || $result->num_rows == 0) {
-    die("Produto não encontrado.");
+    die("Serviço não encontrado.");
 }
 
-$produto = $result->fetch_assoc();
+$servico = $result->fetch_assoc();
 
 $mensagem_sucesso = "";
 $errors = [];
@@ -41,10 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($errors)) {
 
         // verificar conflito
-        $check = $conn->prepare("
-            SELECT id FROM pedidos 
-            WHERE data_marcacao = ? AND hora_marcacao = ?
-        ");
+        $check = $conn->prepare("\n            SELECT id FROM pedidos \n            WHERE data_marcacao = ? AND hora_marcacao = ?\n        ");
 
         $check->bind_param("ss", $data_marcacao, $hora_marcacao);
         $check->execute();
@@ -56,11 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         } else {
 
-            $stmt = $conn->prepare("
-                INSERT INTO pedidos 
-                (service_id, nome, email, telefone, mensagem, data_marcacao, hora_marcacao)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
+            $stmt = $conn->prepare("\n                INSERT INTO pedidos \n                (service_id, nome, email, telefone, mensagem, data_marcacao, hora_marcacao)\n                VALUES (?, ?, ?, ?, ?, ?, ?)\n            ");
 
             $stmt->bind_param(
                 "issssss",
@@ -94,8 +87,8 @@ $old_mensagem = htmlspecialchars($mensagem ?? '');
 <html lang="pt-PT">
 <head>
 <meta charset="UTF-8">
-<title><?= htmlspecialchars($produto['nome']) ?></title>
-<link rel="stylesheet" href="../style.css">
+<title><?= htmlspecialchars($servico['nome']) ?></title>
+<?php require_once __DIR__ . '/../inc/site_head.php'; ?>
 
 <style>
 .product-grid {
@@ -117,11 +110,7 @@ $old_mensagem = htmlspecialchars($mensagem ?? '');
 
 <body>
 
-<header>
-    <div class="container">
-        <h2><?= htmlspecialchars($produto['nome']) ?></h2>
-    </div>
-</header>
+<?php require_once __DIR__ . '/../inc/site_header.php'; ?>
 
 <main>
 <div class="container">
@@ -129,9 +118,9 @@ $old_mensagem = htmlspecialchars($mensagem ?? '');
 <div class="product-grid">
 
     <div>
-        <img src="/laboratorio/images/<?= htmlspecialchars($produto['imagem']) ?>">
+        <img src="/laboratorio/images/<?= htmlspecialchars($servico['imagem']) ?>">
 
-        <p><?= nl2br(htmlspecialchars($produto['descricao'])) ?></p>
+        <p><?= nl2br(htmlspecialchars($servico['descricao'])) ?></p>
     </div>
 
     <aside>

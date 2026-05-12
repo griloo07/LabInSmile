@@ -12,38 +12,10 @@ if (!isset($_SESSION['csrf_token'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
     <title>LabInSmile - Próteses Dentárias</title>
-    <link rel="stylesheet" href="../style.css">
+    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
 </head>
 <body class="has-bg">
-<header>
-    <div class="container">
-        <div class="topbar">
-            <div class="logo">
-                <img src="../images/logo labinsmile.jpeg" alt="LabInSmile">
-                LabInSmile
-            </div>
-            <div class="top-right">
-                <nav>
-                    <a href="produtos.php">Produtos</a>
-                    <a href="especialidades.php">Especialidades</a>
-                    <a href="contacto.php">Contacto</a>
-                </nav>
-                <div class="auth-buttons">
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <span class="user-info">Olá, <?= htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']) ?></span>
-                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                            <a href="manage_users.php" class="btn-login btn-admin">Gerir Utilizadores</a>
-                        <?php endif; ?>
-                        <a href="logout.php" class="btn-login">Sair</a>
-                    <?php else: ?>
-                        <a href="login.php" class="btn-login">Login</a>
-                        <a href="registo.php" class="btn-login">Registar</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</header>
+<?php require_once __DIR__ . '/../inc/site_header.php'; ?>
 
 <main>
     <!-- Hero section removed as requested -->

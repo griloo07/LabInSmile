@@ -7,42 +7,13 @@ require_once __DIR__ . '/../database.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
-    <title>Produtos - LabInSmile</title>
+    <title>Serviços - LabInSmile</title>
+    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
     <style>
         * { box-sizing: border-box; }
         body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #111;
-            background: #f7f9fb;
+            <?php require_once __DIR__ . '/../inc/site_header.php'; ?>
         }
-        header {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 15px;
-        }
-        .topbar {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-        .logo {
-            font-weight: bold;
-            font-size: 18px;
-            color: #0b6e4f;
-            cursor: pointer;
-        }
-        .muted-small{ font-size:12px; color:#6b7280 }
         nav {
             display: flex;
             gap: 5px;
@@ -59,23 +30,29 @@ require_once __DIR__ . '/../database.php';
             background: #eef2f5;
             color: #0b6e4f;
         }
-        .auth-buttons {
-            display: flex;
-            gap: 10px;
+        /* Auth button styles moved to global style.css for consistent subtle design */
+
+        /* Page-specific tweaks: slightly larger lab name and button text, ensure vertical alignment */
+        header .logo {
+            display: inline-flex;
             align-items: center;
+            font-weight: 700;
+            font-size: 20px;
+            color: #0b6e4f;
+            cursor: pointer;
+            line-height: 1;
+            height: 48px;
+            padding: 0 6px;
         }
-        .btn-login {
-            background: #0b6e4f;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        .btn-login:hover {
-            background: #0a5a41;
-        }
+
+        /* Slightly larger auth buttons on this page to match request (use global styles) */
+
+          /* Ensure nav and controls align horizontally with logo */
+          .topbar { align-items: center; }
+
+          /* Force the right-side container in header to align contents vertically
+              target the immediate div following the logo anchor */
+          .topbar > div { display: flex; align-items: center; gap: 20px; margin-left: auto; width: auto !important; }
         main {
             min-height: calc(100vh - 280px);
             padding: 40px 15px;
@@ -125,29 +102,34 @@ require_once __DIR__ . '/../database.php';
             nav a { flex: 1; text-align: center; }
         }
     </style>
-<!-- Botão Gestão movido para o nav (ver mais abaixo) -->
+<?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+
+    <a href="/LabInSmile/pages/admin.php" class="btn-admin">
+        ⚙️ Painel Admin
+    </a>
+
+<?php endif; ?>
 </head>
 <body>
 
 <header>
     <div class="container">
         <div class="topbar">
-            <a href="home.php" class="logo">LabInSmile</a>
+            <a href="home.php" class="logo" style="text-decoration: none; color: #0b6e4f; display:inline-flex; align-items:center; gap:8px;"> 
+                <img src="../images/logo_labinsmile.png" alt="LabInSmile" style="height:30px; width:auto; border-radius:8px; object-fit:cover"> LabInSmile
+            </a>
 
             <div class="top-right">
                 
                 <nav>
-                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                        <a href="admin.php">Gestão</a>
-                    <?php endif; ?>
-                    <a href="produtos.php">Produtos</a>
+                    <a href="servicos.php" style="color: #0b6e4f; font-weight: bold;">Serviços</a>
                     <a href="especialidades.php">Especialidades</a>
                     <a href="contacto.php">Contacto</a>
                 </nav>
 
                 <div class="auth-buttons">
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <span class="muted-small">
+                        <span style="font-size: 14px; color: #6b7280;">
                             Olá, <?= htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']) ?>
                         </span>
                         <a href="logout.php" class="btn-login">Sair</a>
@@ -164,7 +146,7 @@ require_once __DIR__ . '/../database.php';
 
 <main>
     <div class="container">
-        <h1>Nossos Produtos</h1>
+        <h1>Nossos Serviços</h1>
         
         <div class="services-grid">
 
@@ -177,8 +159,8 @@ require_once __DIR__ . '/../database.php';
             while ($row = $result->fetch_assoc()) {
         ?>
 
-                <a href="produto.php?id=<?= $row['id'] ?>" style="text-decoration:none; color:inherit; display:block;">
-            <div class="service-card">
+            <a href="servico.php?id=<?= $row['id'] ?>" style="text-decoration:none; color:inherit;">
+    <div class="service-card">
 
         <?php if (!empty($row['imagem'])): ?>
             <img src="/laboratorio/images/<?= htmlspecialchars($row['imagem']) ?>">
@@ -190,7 +172,7 @@ require_once __DIR__ . '/../database.php';
             }
 
         } else {
-            echo "<p>Sem produtos disponíveis.</p>";
+            echo "<p>Sem serviços disponíveis.</p>";
         }
         ?>
 
