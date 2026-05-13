@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $stmt = $conn->prepare("INSERT INTO services (nome, descricao, imagem) VALUES (?, ?, ?)");
                 $stmt->bind_param("sss", $nome, $descricao, $imagem);
                 if ($stmt->execute()) {
-                    $mensagem = "Produto adicionado com sucesso!";
+                    $mensagem = "Serviço adicionado com sucesso!";
                 } else {
                     $mensagem = "Erro ao adicionar: " . $stmt->error;
                 }
@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $stmt = $conn->prepare("UPDATE services SET nome = ?, descricao = ?, imagem = ? WHERE id = ?");
                 $stmt->bind_param("sssi", $nome, $descricao, $imagem, $id);
                 if ($stmt->execute()) {
-                    $mensagem = "Produto atualizado com sucesso!";
+                    $mensagem = "Serviço atualizado com sucesso!";
                 } else {
                     $mensagem = "Erro ao atualizar: " . $stmt->error;
                 }
@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $stmt = $conn->prepare("DELETE FROM services WHERE id = ?");
                 $stmt->bind_param("i", $id);
                 if ($stmt->execute()) {
-                    $mensagem = "Produto eliminado.";
+                    $mensagem = "Serviço eliminado.";
                 } else {
                     $mensagem = "Erro ao eliminar: " . $stmt->error;
                 }
@@ -81,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     exit;
 }
 
-// Se for pedido de edição, buscar produto
+// Se for pedido de edição, buscar serviço
 $edit_product = null;
 if (isset($_GET['edit'])) {
     $id = intval($_GET['edit']);
@@ -101,7 +101,7 @@ if (isset($_GET['edit'])) {
 <head>
     <meta charset="utf-8">
     <title>Painel Admin - LabInSmile</title>
-    <link rel="stylesheet" href="../style.css">
+    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
     <style>
         .admin-wrap { max-width:1100px; margin:20px auto; padding:20px; }
         .card { background:#fff; padding:15px; border-radius:8px; box-shadow:0 1px 6px rgba(0,0,0,0.05); }
@@ -117,7 +117,7 @@ if (isset($_GET['edit'])) {
 
 <div class="admin-wrap">
     <div style="margin-bottom:12px;">
-        <a href="/LabInSmile/pages/produtos.php" onclick="if(document.referrer){ history.back(); return false; }" style="text-decoration:none; display:inline-block; padding:8px 12px; background:#0b6e4f; color:#fff; border-radius:6px;">← Voltar</a>
+        <a href="/LabInSmile/pages/servicos.php" onclick="if(document.referrer){ history.back(); return false; }" style="text-decoration:none; display:inline-block; padding:8px 12px; background:#0b6e4f; color:#fff; border-radius:6px;">← Voltar</a>
     </div>
     <h1>Painel Admin</h1>
 
@@ -126,7 +126,7 @@ if (isset($_GET['edit'])) {
     <?php endif; ?>
 
     <div class="card">
-        <h2 id="form-title"><?= $edit_product ? 'Editar Produto' : 'Adicionar Produto' ?></h2>
+        <h2 id="form-title"><?= $edit_product ? 'Editar Serviço' : 'Adicionar Serviço' ?></h2>
 
         <form id="product-form" method="POST">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
@@ -164,7 +164,7 @@ if (isset($_GET['edit'])) {
         <div id="upload-status" style="margin-top:8px; font-size:13px; color:#374151;"></div>
     </div>
 
-    <h2 style="margin-top:20px">Produtos existentes</h2>
+    <h2 style="margin-top:20px">Serviços existentes</h2>
 
     <?php
     $result = $conn->query("SELECT * FROM services ORDER BY id DESC");
@@ -190,7 +190,7 @@ if (isset($_GET['edit'])) {
         <div class="actions">
             <a href="#" class="btn-edit">Editar</a>
 
-            <form method="POST" onsubmit="return confirm('Tens a certeza que queres eliminar este produto?');">
+                <form method="POST" onsubmit="return confirm('Tens a certeza que queres eliminar este serviço?');">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="id" value="<?= intval($row['id']) ?>">
@@ -202,7 +202,7 @@ if (isset($_GET['edit'])) {
     <?php
         endwhile;
     else:
-        echo "<p>Sem produtos.</p>";
+        echo "<p>Sem serviços.</p>";
     endif;
     ?>
 
@@ -213,7 +213,7 @@ if (isset($_GET['edit'])) {
 
     <div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
         <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:700px;">
-        <h3>Editar Produto</h3>
+        <h3>Editar Serviço</h3>
         <form id="modal-form" method="POST">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
             <input type="hidden" name="action" value="update">
@@ -328,14 +328,14 @@ productForm.addEventListener('submit', function(){
 });
 
 // If user clicks cancel (when editing), reset the form
-formCancel.addEventListener('click', function(){
+    formCancel.addEventListener('click', function(){
     formAction.value = 'create';
     document.getElementById('form-id').value = '';
     document.getElementById('form-nome').value = '';
     document.getElementById('form-descricao').value = '';
     document.getElementById('form-imagem').value = '';
     preview.innerHTML = '';
-    document.getElementById('form-title').textContent = 'Adicionar Produto';
+        document.getElementById('form-title').textContent = 'Adicionar Serviço';
     formCancel.style.display = 'none';
 });
 
@@ -351,7 +351,7 @@ document.querySelectorAll('.btn-edit').forEach(btn => {
         preview.innerHTML = card.dataset.imagem ? '<img src="/LabInSmile/images/' + card.dataset.imagem + '" style="max-width:120px;border-radius:6px">' : '';
         formAction.value = 'update';
         formCancel.style.display = 'inline-block';
-        document.getElementById('form-title').textContent = 'Editar Produto';
+        document.getElementById('form-title').textContent = 'Editar Serviço';
     });
 });
 </script>

@@ -49,6 +49,24 @@ nav a:hover{background:var(--accent);color:var(--primary)}
 .btn-login.primary{background:linear-gradient(180deg,var(--primary),var(--primary-700));color:white;border:none;box-shadow:var(--shadow-sm)}
 .btn-admin{background:var(--dark);color:#fff;padding:8px 12px;border-radius:10px;text-decoration:none}
 
+/* Subtle auth buttons (global) */
+header .auth-buttons .btn-login{
+    color: rgba(11,110,79,0.85);
+    background: transparent;
+    border: 1px solid rgba(11,110,79,0.08);
+    padding:6px 10px;
+    border-radius:8px;
+    font-weight:600;
+    font-size:14px;
+    transition: background .18s, color .18s, transform .08s;
+}
+header .auth-buttons .btn-login:hover{
+    background: rgba(11,110,79,0.04);
+    color: rgba(11,110,79,0.95);
+    transform: translateY(-1px);
+}
+
+
 main{min-height:calc(100vh - 300px);padding-bottom:32px}
 
 footer{

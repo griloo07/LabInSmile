@@ -8,6 +8,7 @@ require_once __DIR__ . '/../config.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
     <title>Especialidades - LabInSmile</title>
+    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -57,22 +58,7 @@ require_once __DIR__ . '/../config.php';
             background: #eef2f5;
             color: #0b6e4f;
         }
-        .auth-buttons {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .btn-login {
-            background: #0b6e4f;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .btn-login:hover {
-            background: #0a5a41;
-        }
+        /* Auth button styles moved to global style.css for consistent subtle design */
         main {
             min-height: calc(100vh - 280px);
             padding: 40px 15px;
@@ -157,10 +143,12 @@ require_once __DIR__ . '/../config.php';
 <header>
     <div class="container">
         <div class="topbar">
-            <a href="home.php" class="logo" style="text-decoration: none; color: #0b6e4f;">LabInSmile</a>
-            <div style="display: flex; align-items: center; gap: 20px; margin-left: auto; width: 100%; justify-content: flex-end;">
+            <a href="home.php" class="logo" style="text-decoration: none; color: #0b6e4f; display:flex; align-items:center; gap:8px;"> 
+                <img src="../images/logo_labinsmile.png" alt="LabInSmile" style="height:30px; width:auto; border-radius:8px; object-fit:cover"> LabInSmile
+            </a>
+            <div class="top-right">
                 <nav>
-                    <a href="produtos.php">Produtos</a>
+                    <a href="servicos.php">Serviços</a>
                     <a href="especialidades.php" style="color: #0b6e4f; font-weight: bold;">Especialidades</a>
                     <a href="contacto.php">Contacto</a>
                 </nav>
