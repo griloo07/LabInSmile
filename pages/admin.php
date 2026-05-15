@@ -135,7 +135,7 @@ if (isset($_GET['edit'])) {
             <input type="hidden" name="imagem" id="form-imagem" value="<?= htmlspecialchars($edit_product['imagem'] ?? '') ?>">
 
             <div>
-                <label>Nome</label><br>
+                <label>T&iacute;tulo</label><br>
                 <input type="text" name="nome" id="form-nome" required value="<?= htmlspecialchars($edit_product['nome'] ?? '') ?>">
             </div>
 
@@ -219,7 +219,7 @@ if (isset($_GET['edit'])) {
             <input type="hidden" name="action" value="update">
             <input type="hidden" name="id" id="modal-id">
             <div>
-                <label>Nome</label><br>
+                <label>T&iacute;tulo</label><br>
                 <input type="text" name="nome" id="modal-nome" required>
             </div>
             <div>

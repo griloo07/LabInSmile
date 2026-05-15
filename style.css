@@ -38,26 +38,26 @@ header .container{padding:8px 1cm}
 .logo img{height:30px;width:auto;border-radius:10px;object-fit:cover}
 
 nav{display:flex;gap:8px}
-nav a{color:var(--text);text-decoration:none;padding:8px 12px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:0.2px;transition:all .18s ease}
+nav a{color:var(--primary);text-decoration:none;padding:8px 12px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:0.2px;transition:all .18s ease}
 nav a:hover{background:var(--accent);color:var(--primary)}
 
 .top-right{display:flex;align-items:center;gap:18px;margin-left:auto}
 
 .auth-buttons{display:flex;gap:10px;align-items:center}
-.btn-login{background:transparent;color:var(--primary);padding:8px 12px;border-radius:10px;border:1px solid rgba(11,110,79,0.06);font-weight:700;font-size:15px;cursor:pointer;transition:all .18s}
+.btn-login{background:transparent;color:var(--primary);padding:8px 12px;border-radius:10px;border:0;font-weight:700;font-size:15px;cursor:pointer;transition:all .18s}
 .btn-login:hover{background:var(--accent);color:var(--primary)}
 .btn-login.primary{background:linear-gradient(180deg,var(--primary),var(--primary-700));color:white;border:none;box-shadow:var(--shadow-sm)}
-.btn-admin{background:var(--dark);color:#fff;padding:8px 12px;border-radius:10px;text-decoration:none}
+.btn-admin{background:transparent;color:var(--primary);padding:8px 12px;border-radius:10px;text-decoration:none}
 
 /* Subtle auth buttons (global) */
 header .auth-buttons .btn-login{
-    color: rgba(11,110,79,0.85);
+    color: var(--primary);
     background: transparent;
-    border: 1px solid rgba(11,110,79,0.08);
-    padding:6px 10px;
-    border-radius:8px;
-    font-weight:600;
-    font-size:14px;
+    border: 0;
+    padding:8px 12px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:15px;
     transition: background .18s, color .18s, transform .08s;
 }
 header .auth-buttons .btn-login:hover{
@@ -258,3 +258,83 @@ label {
 .why-box h2{margin-top:0}
 .why-box .expertise-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
 .expertise-card{background:transparent;padding:8px;border-radius:8px}
+
+/* BOTÃO WHATSAPP */
+
+.whatsapp-float{
+    position: fixed;
+    width: 60px;
+    height: 60px;
+
+    bottom: 25px;
+    right: 25px;
+
+    background: #25D366;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+
+    z-index: 9999;
+
+    transition: 0.3s;
+}
+
+.whatsapp-float:hover{
+    transform: scale(1.08);
+}
+
+.whatsapp-float img{
+    width: 34px;
+    height: 34px;
+}
+
+/* Responsive rules: improve layout on mobile devices */
+@media (max-width: 900px) {
+    .container { padding: 16px; }
+    header .container { padding: 8px 16px; }
+    .product-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 800px) {
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .logo { font-size: 0.95rem; }
+    .logo img { height: 28px; }
+
+    .mobile-menu-toggle { display: flex; align-items: center; justify-content: center; background: transparent; border: none; width: 40px; height: 40px; color: var(--primary); cursor: pointer; }
+
+    /* hide nav by default on mobile; open toggles it */
+    nav { display: none; order: 2; width: 100%; }
+
+    .topbar.open nav { display: flex; flex-direction: column; gap: 8px; }
+    .topbar.open nav a { width: 100%; padding: 10px 12px; border-radius: 8px; }
+
+    nav a { flex: 0 0 auto; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+
+    .top-right { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+    .auth-buttons { order: 3; width: 100%; justify-content: flex-end; display: flex; gap: 8px; }
+    .auth-buttons a, .auth-buttons .btn-login { padding: 8px 10px; font-size: 14px; }
+
+    .contact-grid { grid-template-columns: 1fr; }
+    .cta-box { margin: 18px 8px; }
+}
+
+@media (max-width: 480px) {
+    .container { padding: 12px; }
+    .logo img { height: 24px; }
+    .logo { font-size: 0.92rem; }
+    nav a { font-size: 13px; padding: 8px 10px; }
+    .auth-buttons { justify-content: space-between; }
+    main { padding: 16px; }
+    footer { padding: 16px 12px; font-size: 13px; }
+    .whatsapp-float { width: 50px; height: 50px; bottom: 18px; right: 18px; }
+}
