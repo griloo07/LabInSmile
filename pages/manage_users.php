@@ -8,15 +8,15 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     exit;
 }
 
-// Buscar utilizadores
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+}
+
 $stmt = $conn->prepare('SELECT id, email, name, role FROM users ORDER BY id ASC');
 $stmt->execute();
 $result = $stmt->get_result();
 $users = $result->fetch_all(MYSQLI_ASSOC);
 ?>
-<?php if (!empty($_SESSION['flash'])): ?>
-    <div style="max-width:900px;margin:10px 0;padding:10px;border-radius:6px;background:#eef2ff;color:#0b6e4f;"><?= htmlspecialchars($_SESSION['flash']) ?></div>
-<?php unset($_SESSION['flash']); endif; ?>
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
@@ -30,13 +30,15 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
         th,td{padding:10px;border:1px solid #ddd;text-align:left}
         th{background:#f3f4f6}
         .btn{display:inline-block;padding:8px 12px;background:#0b6e4f;color:#fff;border-radius:6px;text-decoration:none}
-        .danger{background:#b91c1c}
         select{padding:6px}
         .note{color:#6b7280;font-size:14px;margin-bottom:12px}
     </style>
 </head>
 <body>
     <h1>Gerir Utilizadores</h1>
+    <?php if (!empty($_SESSION['flash'])): ?>
+        <div style="max-width:900px;margin:10px 0;padding:10px;border-radius:6px;background:#eef2ff;color:#0b6e4f;"><?= htmlspecialchars($_SESSION['flash']) ?></div>
+    <?php unset($_SESSION['flash']); endif; ?>
     <p class="note">Como administrador, pode alterar o role dos utilizadores (não pode alterar o seu próprio role aqui).</p>
     <p><a href="home.php" class="btn">Voltar</a></p>
 
@@ -55,7 +57,7 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
                         <?php if ($u['id'] == $_SESSION['user_id']): ?>
                             <em>Seu utilizador</em>
                         <?php else: ?>
-                            <form method="post" action="process_set_role.php" style="display:inline">
+                            <form method="post" action="/LabInSmile/process_set_role.php" style="display:inline">
                                 <input type="hidden" name="id" value="<?= htmlspecialchars($u['id']) ?>">
                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                 <select name="role">

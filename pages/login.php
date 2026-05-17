@@ -7,7 +7,9 @@ $success_message = '';
 
 // Se o utilizador já está autenticado, redireciona para home
 if (isset($_SESSION['user_id'])) {
-    header('Location: home.php');
+    $redirect = $_SESSION['redirect_after_login'] ?? 'servicos.php';
+    unset($_SESSION['redirect_after_login']);
+    header('Location: ' . $redirect);
     exit;
 }
 
@@ -46,7 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'lo
                     session_regenerate_id(true);
 
                     // Redirecionar para página protegida ou home
-                    header('Location: home.php');
+                    $redirect = $_SESSION['redirect_after_login'] ?? 'servicos.php';
+                    unset($_SESSION['redirect_after_login']);
+                    header('Location: ' . $redirect);
                     exit;
                 } else {
                     $errors[] = 'Email ou palavra-passe incorretos.';

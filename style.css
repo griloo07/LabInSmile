@@ -38,26 +38,26 @@ header .container{padding:8px 1cm}
 .logo img{height:30px;width:auto;border-radius:10px;object-fit:cover}
 
 nav{display:flex;gap:8px}
-nav a{color:var(--text);text-decoration:none;padding:8px 12px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:0.2px;transition:all .18s ease}
+nav a{color:var(--primary);text-decoration:none;padding:8px 12px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:0.2px;transition:all .18s ease}
 nav a:hover{background:var(--accent);color:var(--primary)}
 
 .top-right{display:flex;align-items:center;gap:18px;margin-left:auto}
 
 .auth-buttons{display:flex;gap:10px;align-items:center}
-.btn-login{background:transparent;color:var(--primary);padding:8px 12px;border-radius:10px;border:1px solid rgba(11,110,79,0.06);font-weight:700;font-size:15px;cursor:pointer;transition:all .18s}
+.btn-login{background:transparent;color:var(--primary);padding:8px 12px;border-radius:10px;border:0;font-weight:700;font-size:15px;cursor:pointer;transition:all .18s}
 .btn-login:hover{background:var(--accent);color:var(--primary)}
 .btn-login.primary{background:linear-gradient(180deg,var(--primary),var(--primary-700));color:white;border:none;box-shadow:var(--shadow-sm)}
-.btn-admin{background:var(--dark);color:#fff;padding:8px 12px;border-radius:10px;text-decoration:none}
+.btn-admin{background:transparent;color:var(--primary);padding:8px 12px;border-radius:10px;text-decoration:none}
 
 /* Subtle auth buttons (global) */
 header .auth-buttons .btn-login{
-    color: rgba(11,110,79,0.85);
+    color: var(--primary);
     background: transparent;
-    border: 1px solid rgba(11,110,79,0.08);
-    padding:6px 10px;
-    border-radius:8px;
-    font-weight:600;
-    font-size:14px;
+    border: 0;
+    padding:8px 12px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:15px;
     transition: background .18s, color .18s, transform .08s;
 }
 header .auth-buttons .btn-login:hover{
@@ -228,14 +228,55 @@ label {
 
 /* Fundo estático usado na home (classe aplicada ao body em home.php) */
 .has-bg{
-    background-image: url('images/fundo estatico.jpeg');
-    background-attachment: fixed;
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
+    background:
+        linear-gradient(180deg, #ffffff 0%, #f7faf9 42%, #eef5f2 100%);
 }
 
 /* Caixa para o CTA de pedir orçamento */
+.home-hero {
+    padding: 36px 0 12px;
+}
+
+.home-hero-inner {
+    align-items: center;
+    display: grid;
+    gap: 34px;
+    grid-template-columns: minmax(220px, 340px) 1fr;
+}
+
+.home-hero-image {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    box-shadow: 0 18px 45px rgba(16,24,40,0.14);
+    overflow: hidden;
+}
+
+.home-hero-image img {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.home-hero-text {
+    background: rgba(255,255,255,0.9);
+    border: 1px solid #e5ece8;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    color: var(--dark);
+    font-size: 18px;
+    line-height: 1.75;
+    padding: 28px;
+}
+
+.home-hero-text p {
+    margin: 0 0 12px;
+}
+
+.home-hero-text p:last-child {
+    margin-bottom: 0;
+}
+
 .cta-box{
     background: var(--surface);
     padding: 28px;
@@ -258,3 +299,94 @@ label {
 .why-box h2{margin-top:0}
 .why-box .expertise-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
 .expertise-card{background:transparent;padding:8px;border-radius:8px}
+
+/* BOTÃO WHATSAPP */
+
+.whatsapp-float{
+    position: fixed;
+    width: 60px;
+    height: 60px;
+
+    bottom: 25px;
+    right: 25px;
+
+    background: #25D366;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+
+    z-index: 9999;
+
+    transition: 0.3s;
+}
+
+.whatsapp-float:hover{
+    transform: scale(1.08);
+}
+
+.whatsapp-float img{
+    width: 34px;
+    height: 34px;
+}
+
+@media(max-width:768px){
+    .whatsapp-float{
+        width: 55px;
+        height: 55px;
+        bottom: 20px;
+        right: 20px;
+    }
+
+    .whatsapp-float img{
+        width: 30px;
+        height: 30px;
+    }
+}
+
+/* Responsive rules: improve layout on mobile devices */
+@media (max-width: 900px) {
+    .container { padding: 16px; }
+    header .container { padding: 8px 16px; }
+    .home-hero { padding-top: 24px; }
+    .home-hero-inner { grid-template-columns: 1fr; justify-items: center; }
+    .home-hero-image { max-width: 320px; width: 72vw; }
+    .home-hero-text { font-size: 16px; line-height: 1.65; padding: 22px; }
+    .product-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 800px) {
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .logo { font-size: 0.95rem; }
+    .logo img { height: 28px; }
+
+    header nav { display: flex; flex-direction: column; gap: 8px; order: 2; width: 100%; }
+    header nav a { width: 100%; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+
+    .top-right { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+    .auth-buttons { order: 3; width: 100%; justify-content: flex-end; display: flex; gap: 8px; }
+    .auth-buttons a, .auth-buttons .btn-login { padding: 8px 10px; font-size: 14px; }
+
+    .contact-grid { grid-template-columns: 1fr; }
+    .cta-box { margin: 18px 8px; }
+}
+
+@media (max-width: 480px) {
+    .container { padding: 12px; }
+    .logo img { height: 24px; }
+    .logo { font-size: 0.92rem; }
+    nav a { font-size: 13px; padding: 8px 10px; }
+    .auth-buttons { justify-content: space-between; }
+    main { padding: 16px; }
+    footer { padding: 16px 12px; font-size: 13px; }
+    .whatsapp-float { width: 50px; height: 50px; bottom: 18px; right: 18px; }
+}

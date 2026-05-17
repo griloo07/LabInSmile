@@ -24,12 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
         if (strlen($mensagem) < 10) $errors[] = 'A mensagem deve ter pelo menos 10 caracteres.';
 
         if (empty($errors)) {
-            $to = 'labinsmile@gmail.com';
             $body = "Nome: $nome\nEmail: $email\nTelefone: $telefone\nAssunto: $assunto\n\nMensagem:\n$mensagem";
-            $headers = "From: $email\nReply-To: $email\nContent-Type: text/plain; charset=UTF-8";
-
             $mail_ok = false;
-            if (function_exists('mail')) {
+            if (function_exists('send_lab_email')) {
+                $mail_ok = send_lab_email($assunto, $body, $email);
+            } elseif (function_exists('mail')) {
+                $to = defined('LAB_EMAIL') ? LAB_EMAIL : 'labinsmile@gmail.com';
+                $headers = "From: $email\r\nReply-To: $email\r\nContent-Type: text/plain; charset=UTF-8";
                 $mail_ok = @mail($to, $assunto, $body, $headers);
             }
 
@@ -230,31 +231,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
     </style>
 </head>
 <body>
-<header>
-    <div class="container">
-        <div class="topbar">
-            <a href="home.php" class="logo" style="text-decoration: none; color: #0b6e4f; display:flex; align-items:center; gap:8px;"> 
-                <img src="../images/logo_labinsmile.png" alt="LabInSmile" style="height:30px; width:auto; border-radius:8px; object-fit:cover"> LabInSmile
-            </a>
-            <div class="top-right">
-                <nav>
-                    <a href="servicos.php">Serviços</a>
-                    <a href="especialidades.php">Especialidades</a>
-                    <a href="contacto.php" style="color: #0b6e4f; font-weight: bold;">Contacto</a>
-                </nav>
-                <div class="auth-buttons">
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <span style="font-size: 14px; color: #6b7280;">Olá, <?= htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']) ?></span>
-                        <a href="logout.php" class="btn-login">Sair</a>
-                    <?php else: ?>
-                        <a href="login.php" class="btn-login">Login</a>
-                        <a href="registo.php" class="btn-login">Registar</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</header>
+
+<?php require_once __DIR__ . '/../inc/site_header.php'; ?>
 
 <main>
     <div class="container">
@@ -351,5 +329,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
         <p>Morada: Avenida da República, Nº 74 1.º Andar Sala 1 Paredes</p>
     </div>
 </footer>
+
+<a
+    href="https://wa.me/351967544606?text=Olá,%20gostaria%20de%20obter%20mais%20informações."
+    class="whatsapp-float"
+    target="_blank"
+>
+
+    <img
+        src="/LabInSmile/images/whatsapp.png"
+        alt="WhatsApp"
+    >
+
+</a>
+
 </body>
 </html>

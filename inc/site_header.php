@@ -9,7 +9,7 @@
             </a>
 
             <div class="top-right">
-                <nav>
+                <nav id="main-nav">
                     <a href="servicos.php">Serviços</a>
                     <a href="especialidades.php">Especialidades</a>
                     <a href="contacto.php">Contacto</a>
@@ -31,3 +31,15 @@
         </div>
     </div>
 </header>
+<style>
+header nav a,
+header .auth-buttons a,
+header .auth-buttons .btn-login,
+header .auth-buttons .btn-admin {
+    color: var(--primary) !important;
+    background: transparent !important;
+    border: 0 !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+}
+</style>

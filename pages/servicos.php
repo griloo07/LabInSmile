@@ -1,6 +1,26 @@
 <?php
 session_start();
-require_once __DIR__ . '/../database.php';
+require_once __DIR__ . '/../config.php';
+
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['redirect_after_login'] = 'servicos.php';
+    header('Location: login.php');
+    exit;
+}
+
+function service_images($value) {
+    $value = trim((string)$value);
+    if ($value === '') {
+        return [];
+    }
+
+    $decoded = json_decode($value, true);
+    if (is_array($decoded)) {
+        return array_values(array_filter($decoded, 'is_string'));
+    }
+
+    return [$value];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-PT">
@@ -11,19 +31,17 @@ require_once __DIR__ . '/../database.php';
     <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
     <style>
         * { box-sizing: border-box; }
-        body {
-            <?php require_once __DIR__ . '/../inc/site_header.php'; ?>
-        }
         nav {
             display: flex;
             gap: 5px;
         }
         nav a {
             text-decoration: none;
-            color: #111;
+            color: #0b6e4f;
             padding: 8px 12px;
             border-radius: 6px;
             font-size: 14px;
+            font-weight: bold;
             transition: all 0.3s;
         }
         nav a:hover {
@@ -63,14 +81,15 @@ require_once __DIR__ . '/../database.php';
         }
         .services-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 220px));
+            justify-content: start;
+            gap: 18px;
             margin-bottom: 40px;
         }
         .service-card {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: all 0.3s;
         }
@@ -80,11 +99,16 @@ require_once __DIR__ . '/../database.php';
         }
         .service-card h3 {
             color: #0b6e4f;
-            margin-top: 0;
+            font-size: 15px;
+            line-height: 1.3;
+            margin: 10px 0 0;
+            text-align: center;
         }
         .service-card img {
-            margin-top: 10px;
+            display: block;
             width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
             border-radius: 8px;
         }
         footer {
@@ -102,13 +126,8 @@ require_once __DIR__ . '/../database.php';
             nav a { flex: 1; text-align: center; }
         }
     </style>
-<?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+<?php /* admin link moved into the header nav (shown only to admins) */ ?>
 
-    <a href="/LabInSmile/pages/admin.php" class="btn-admin">
-        ⚙️ Painel Admin
-    </a>
-
-<?php endif; ?>
 </head>
 <body>
 
@@ -122,6 +141,9 @@ require_once __DIR__ . '/../database.php';
             <div class="top-right">
                 
                 <nav>
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                        <a href="admin.php" class="btn-gestao" style="color: #0b6e4f; font-weight: bold;">Gestão</a>
+                    <?php endif; ?>
                     <a href="servicos.php" style="color: #0b6e4f; font-weight: bold;">Serviços</a>
                     <a href="especialidades.php">Especialidades</a>
                     <a href="contacto.php">Contacto</a>
@@ -151,20 +173,22 @@ require_once __DIR__ . '/../database.php';
         <div class="services-grid">
 
         <?php
-        $sql = "SELECT * FROM services";
+        $sql = "SELECT * FROM services ORDER BY id ASC";
         $result = $conn->query($sql);
 
         if ($result && $result->num_rows > 0) {
 
             while ($row = $result->fetch_assoc()) {
+                $images = service_images($row['imagem'] ?? '');
         ?>
 
             <a href="servico.php?id=<?= $row['id'] ?>" style="text-decoration:none; color:inherit;">
     <div class="service-card">
 
-        <?php if (!empty($row['imagem'])): ?>
-            <img src="/laboratorio/images/<?= htmlspecialchars($row['imagem']) ?>">
+        <?php if (!empty($images)): ?>
+            <img src="/LabInSmile/images/<?= htmlspecialchars($images[0]) ?>" alt="<?= htmlspecialchars($row['nome']) ?>">
         <?php endif; ?>
+        <h3><?= htmlspecialchars($row['nome']) ?></h3>
     </div>
 </a>
 
@@ -189,5 +213,17 @@ require_once __DIR__ . '/../database.php';
     </div>
 </footer>
 
+<a
+    href="https://wa.me/351967544606?text=Olá,%20gostaria%20de%20obter%20mais%20informações."
+    class="whatsapp-float"
+    target="_blank"
+>
+
+    <img
+        src="/LabInSmile/images/whatsapp.png"
+        alt="WhatsApp"
+    >
+
+</a>
 </body>
 </html>

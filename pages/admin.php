@@ -13,6 +13,31 @@ if (!isset($_SESSION['csrf_token'])) {
 
 $mensagem = "";
 
+function service_images($value) {
+    $value = trim((string)$value);
+    if ($value === '') {
+        return [];
+    }
+
+    $decoded = json_decode($value, true);
+    if (is_array($decoded)) {
+        return array_values(array_filter($decoded, 'is_string'));
+    }
+
+    return [$value];
+}
+
+function service_images_value(array $images) {
+    $images = array_values(array_filter(array_map('trim', $images)));
+    if (count($images) === 0) {
+        return '';
+    }
+    if (count($images) === 1) {
+        return $images[0];
+    }
+    return json_encode($images, JSON_UNESCAPED_SLASHES);
+}
+
 // Tratar ações via POST: create, update, delete
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
@@ -25,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($action === 'create') {
             $nome = trim($_POST['nome'] ?? '');
             $descricao = trim($_POST['descricao'] ?? '');
-            $imagem = trim($_POST['imagem'] ?? '');
+            $imagem = service_images_value(json_decode($_POST['imagem'] ?? '[]', true) ?: [$_POST['imagem'] ?? '']);
 
             if ($nome && $descricao) {
                 $stmt = $conn->prepare("INSERT INTO services (nome, descricao, imagem) VALUES (?, ?, ?)");
@@ -44,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $id = intval($_POST['id'] ?? 0);
             $nome = trim($_POST['nome'] ?? '');
             $descricao = trim($_POST['descricao'] ?? '');
-            $imagem = trim($_POST['imagem'] ?? '');
+            $imagem = service_images_value(json_decode($_POST['imagem'] ?? '[]', true) ?: [$_POST['imagem'] ?? '']);
 
             if ($id && $nome && $descricao) {
                 $stmt = $conn->prepare("UPDATE services SET nome = ?, descricao = ?, imagem = ? WHERE id = ?");
@@ -108,7 +133,9 @@ if (isset($_GET['edit'])) {
         .product { border:1px solid #eee; padding:10px; margin:10px 0; display:flex; gap:12px; align-items:flex-start; }
         .product img{ width:100px; height:auto; border-radius:6px }
         .actions form{ display:inline-block; margin-left:8px }
-        .image-row{ display:flex; gap:10px; align-items:center }
+        .image-row{ display:flex; gap:10px; align-items:flex-start }
+        .image-preview{ display:flex; flex-wrap:wrap; gap:8px; min-width:120px }
+        .image-preview img{ width:90px; height:70px; object-fit:cover; border-radius:6px }
         .muted-small{ font-size:12px; color:#6b7280 }
         .mt-10{ margin-top:10px }
     </style>
@@ -135,7 +162,7 @@ if (isset($_GET['edit'])) {
             <input type="hidden" name="imagem" id="form-imagem" value="<?= htmlspecialchars($edit_product['imagem'] ?? '') ?>">
 
             <div>
-                <label>Nome</label><br>
+                <label>T&iacute;tulo</label><br>
                 <input type="text" name="nome" id="form-nome" required value="<?= htmlspecialchars($edit_product['nome'] ?? '') ?>">
             </div>
 
@@ -145,12 +172,16 @@ if (isset($_GET['edit'])) {
             </div>
 
             <div>
-                <label>Imagem</label><br>
+                <label>Imagens</label><br>
                 <div class="image-row">
-                    <div id="preview"><?php if (!empty($edit_product['imagem'])): ?><img src="/LabInSmile/images/<?= htmlspecialchars($edit_product['imagem']) ?>" style="max-width:120px; border-radius:6px"><?php endif; ?></div>
+                    <div id="preview" class="image-preview">
+                        <?php foreach (service_images($edit_product['imagem'] ?? '') as $image): ?>
+                            <img src="/LabInSmile/images/<?= htmlspecialchars($image) ?>" alt="">
+                        <?php endforeach; ?>
+                    </div>
                     <div>
-                        <input type="file" id="image-input" accept="image/*">
-                        <div class="muted-small">Carrega a imagem e será enviada imediatamente.</div>
+                        <input type="file" id="image-input" accept="image/*" multiple>
+                        <div class="muted-small">Pode escolher uma ou mais imagens. Serão enviadas imediatamente.</div>
                     </div>
                 </div>
             </div>
@@ -178,8 +209,9 @@ if (isset($_GET['edit'])) {
          data-nome="<?= htmlspecialchars($row['nome'], ENT_QUOTES) ?>" 
          data-descricao="<?= htmlspecialchars($row['descricao'], ENT_QUOTES) ?>" 
          data-imagem="<?= htmlspecialchars($row['imagem'], ENT_QUOTES) ?>">
-        <?php if (!empty($row['imagem'])): ?>
-            <div><img src="/LabInSmile/images/<?= htmlspecialchars($row['imagem']) ?>" alt="<?= htmlspecialchars($row['nome']) ?>" style="max-width:120px; border-radius:6px"></div>
+        <?php $row_images = service_images($row['imagem']); ?>
+        <?php if (!empty($row_images)): ?>
+            <div><img src="/LabInSmile/images/<?= htmlspecialchars($row_images[0]) ?>" alt="<?= htmlspecialchars($row['nome']) ?>" style="max-width:120px; border-radius:6px"></div>
         <?php endif; ?>
 
         <div class="flex-1">
@@ -208,18 +240,15 @@ if (isset($_GET['edit'])) {
 
 </div>
 
-    </body>
-    </html>
-
-    <div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
-        <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:700px;">
+<div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:700px;">
         <h3>Editar Serviço</h3>
         <form id="modal-form" method="POST">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
             <input type="hidden" name="action" value="update">
             <input type="hidden" name="id" id="modal-id">
             <div>
-                <label>Nome</label><br>
+                <label>T&iacute;tulo</label><br>
                 <input type="text" name="nome" id="modal-nome" required>
             </div>
             <div>
@@ -227,10 +256,10 @@ if (isset($_GET['edit'])) {
                 <textarea name="descricao" id="modal-descricao" required></textarea>
             </div>
             <div>
-                <label>Imagem (ficheiro já carregado)</label><br>
-                <div id="modal-preview" class="modal-preview"></div>
+                <label>Imagens (ficheiros já carregados)</label><br>
+                <div id="modal-preview" class="image-preview modal-preview"></div>
                 <input type="hidden" name="imagem" id="modal-imagem">
-                <input type="file" id="modal-image-input" accept="image/*">
+                <input type="file" id="modal-image-input" accept="image/*" multiple>
             </div>
             <div class="modal-buttons">
                 <button type="submit">Guardar</button>
@@ -250,29 +279,61 @@ async function uploadFile(file) {
     return res.json();
 }
 
-// Image input on main form
+function parseImages(value) {
+    if (!value) return [];
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed.filter(Boolean) : [value];
+    } catch (err) {
+        return [value];
+    }
+}
+
+function storeImages(input, images) {
+    const clean = [...new Set(images.filter(Boolean))];
+    input.value = JSON.stringify(clean);
+    return clean;
+}
+
+function renderPreview(target, images) {
+    target.innerHTML = images.map(filename => (
+        '<img src="/LabInSmile/images/' + filename + '" alt="">'
+    )).join('');
+}
+
+async function addFiles(files, input, target, statusTarget) {
+    const selected = Array.from(files || []);
+    if (selected.length === 0) return;
+
+    if (statusTarget) statusTarget.textContent = 'A carregar...';
+    const images = parseImages(input.value);
+
+    try {
+        for (const file of selected) {
+            const json = await uploadFile(file);
+            if (!json.success) {
+                throw new Error(json.error || 'Falha');
+            }
+            images.push(json.filename);
+        }
+
+        const clean = storeImages(input, images);
+        renderPreview(target, clean);
+        if (statusTarget) statusTarget.textContent = clean.length + ' imagem(ns) carregada(s).';
+    } catch (err) {
+        if (statusTarget) statusTarget.textContent = 'Erro: ' + err.message;
+        else target.innerHTML = 'Erro: ' + err.message;
+    }
+}
+
 const imageInput = document.getElementById('image-input');
 const preview = document.getElementById('preview');
 const formImagem = document.getElementById('form-imagem');
 const uploadStatus = document.getElementById('upload-status');
 
 if (imageInput) {
-    imageInput.addEventListener('change', async function(e) {
-        const file = this.files[0];
-        if (!file) return;
-        uploadStatus.textContent = 'A carregar...';
-        try {
-            const json = await uploadFile(file);
-            if (json.success) {
-                formImagem.value = json.filename;
-                preview.innerHTML = '<img src="/LabInSmile/images/' + json.filename + '" style="max-width:120px;border-radius:6px">';
-                uploadStatus.textContent = 'Imagem carregada: ' + json.filename;
-            } else {
-                uploadStatus.textContent = 'Erro: ' + (json.error || 'Falha');
-            }
-        } catch (err) {
-            uploadStatus.textContent = 'Erro ao enviar.';
-        }
+    imageInput.addEventListener('change', function() {
+        addFiles(this.files, formImagem, preview, uploadStatus);
     });
 }
 
@@ -294,7 +355,7 @@ document.querySelectorAll('.btn-edit').forEach(btn => {
         modalNome.value = card.dataset.nome || '';
         modalDescricao.value = card.dataset.descricao || '';
         modalImagem.value = card.dataset.imagem || '';
-        modalPreview.innerHTML = modalImagem.value ? '<img src="/LabInSmile/images/' + modalImagem.value + '" style="max-width:120px;border-radius:6px">' : '';
+        renderPreview(modalPreview, parseImages(modalImagem.value));
         modal.style.display = 'flex';
     });
 });
@@ -303,32 +364,18 @@ modalClose.addEventListener('click', function(){ modal.style.display='none'; });
 
 // allow uploading new image from modal
 if (modalImageInput) {
-    modalImageInput.addEventListener('change', async function(){
-        const f = this.files[0];
-        if (!f) return;
-        modalPreview.innerHTML = 'A carregar...';
-        const json = await uploadFile(f);
-        if (json.success) {
-            modalImagem.value = json.filename;
-            modalPreview.innerHTML = '<img src="/LabInSmile/images/' + json.filename + '" style="max-width:120px;border-radius:6px">';
-        } else {
-            modalPreview.innerHTML = 'Erro: ' + (json.error||'Falha');
-        }
+    modalImageInput.addEventListener('change', function(){
+        addFiles(this.files, modalImagem, modalPreview, null);
     });
 }
 
 // When modal form submits, post to admin.php via normal POST (will reload)
 // When main form is used for create, ensure action is set
-const productForm = document.getElementById('product-form');
 const formAction = document.getElementById('form-action');
 const formCancel = document.getElementById('form-cancel');
 
-productForm.addEventListener('submit', function(){
-    // default action in hidden field
-});
-
 // If user clicks cancel (when editing), reset the form
-    formCancel.addEventListener('click', function(){
+formCancel.addEventListener('click', function(){
     formAction.value = 'create';
     document.getElementById('form-id').value = '';
     document.getElementById('form-nome').value = '';
@@ -348,10 +395,12 @@ document.querySelectorAll('.btn-edit').forEach(btn => {
         document.getElementById('form-nome').value = card.dataset.nome || '';
         document.getElementById('form-descricao').value = card.dataset.descricao || '';
         document.getElementById('form-imagem').value = card.dataset.imagem || '';
-        preview.innerHTML = card.dataset.imagem ? '<img src="/LabInSmile/images/' + card.dataset.imagem + '" style="max-width:120px;border-radius:6px">' : '';
+        renderPreview(preview, parseImages(card.dataset.imagem || ''));
         formAction.value = 'update';
         formCancel.style.display = 'inline-block';
         document.getElementById('form-title').textContent = 'Editar Serviço';
     });
 });
 </script>
+</body>
+</html>
