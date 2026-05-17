@@ -9,11 +9,6 @@
             </a>
 
             <div class="top-right">
-                <button class="mobile-menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="main-nav">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </button>
                 <nav id="main-nav">
                     <a href="servicos.php">Serviços</a>
                     <a href="especialidades.php">Especialidades</a>
@@ -48,14 +43,3 @@ header .auth-buttons .btn-admin {
     text-decoration: none !important;
 }
 </style>
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-    var toggle = document.querySelector('.mobile-menu-toggle');
-    if (!toggle) return;
-    var topbar = toggle.closest('.topbar');
-    toggle.addEventListener('click', function(){
-        var isOpen = topbar.classList.toggle('open');
-        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    });
-});
-</script>

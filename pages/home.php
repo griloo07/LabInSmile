@@ -14,51 +14,6 @@ if (!isset($_SESSION['csrf_token'])) {
     <title>LabInSmile - Próteses Dentárias</title>
 
     <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
-
-    <style>
-        .whatsapp-float{
-            position: fixed;
-            width: 60px;
-            height: 60px;
-            bottom: 25px;
-            right: 25px;
-            z-index: 9999;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            background: #25D366;
-            border-radius: 50%;
-
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-
-            transition: 0.3s;
-        }
-
-        .whatsapp-float:hover{
-            transform: scale(1.08);
-        }
-
-        .whatsapp-float img{
-            width: 34px;
-            height: 34px;
-        }
-
-        @media(max-width:768px){
-            .whatsapp-float{
-                width: 55px;
-                height: 55px;
-                bottom: 20px;
-                right: 20px;
-            }
-
-            .whatsapp-float img{
-                width: 30px;
-                height: 30px;
-            }
-        }
-    </style>
 </head>
 
 <body class="has-bg">
@@ -66,6 +21,21 @@ if (!isset($_SESSION['csrf_token'])) {
 <?php require_once __DIR__ . '/../inc/site_header.php'; ?>
 
 <main>
+
+    <section class="home-hero">
+        <div class="container home-hero-inner">
+            <div class="home-hero-image">
+                <img src="/LabInSmile/images/fundo estatico.jpeg" alt="LabInSmile">
+            </div>
+
+            <div class="home-hero-text">
+                <p>Na LabInSmile acreditamos que cada detalhe faz a diferença.</p>
+                <p>Os nossos trabalhos são desenvolvidos maioritariamente de forma artesanal, com precisão, dedicação e atenção ao detalhe em cada etapa.</p>
+                <p>Valorizamos a estética, o conforto e a naturalidade para garantir resultados de elevada qualidade.</p>
+                <p>O nosso compromisso é entregar soluções fiáveis e acabamentos à altura de cada sorriso.</p>
+            </div>
+        </div>
+    </section>
 
     <section class="why-choose-us">
         <div class="container">
@@ -125,26 +95,6 @@ if (!isset($_SESSION['csrf_token'])) {
                     </div>
 
                 </div>
-
-            </div>
-
-        </div>
-    </section>
-
-    <section class="cta-section">
-        <div class="container">
-
-            <div class="cta-box">
-
-                <h2>Próteses Dentárias Personalizadas</h2>
-
-                <p>
-                    Qualidade, precisão e acabamento artesanal com tecnologia avançada
-                </p>
-
-                <a href="contacto.php" class="btn-orcamento">
-                    Pedir Orçamento
-                </a>
 
             </div>
 

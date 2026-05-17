@@ -1,6 +1,26 @@
 <?php
 session_start();
-require_once __DIR__ . '/../database.php';
+require_once __DIR__ . '/../config.php';
+
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['redirect_after_login'] = 'servicos.php';
+    header('Location: login.php');
+    exit;
+}
+
+function service_images($value) {
+    $value = trim((string)$value);
+    if ($value === '') {
+        return [];
+    }
+
+    $decoded = json_decode($value, true);
+    if (is_array($decoded)) {
+        return array_values(array_filter($decoded, 'is_string'));
+    }
+
+    return [$value];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-PT">
@@ -108,52 +128,6 @@ require_once __DIR__ . '/../database.php';
     </style>
 <?php /* admin link moved into the header nav (shown only to admins) */ ?>
 
-<style>
-.whatsapp-float{
-    position: fixed;
-    width: 60px;
-    height: 60px;
-    bottom: 25px;
-    right: 25px;
-    z-index: 9999;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #25D366;
-    border-radius: 50%;
-
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-
-    transition: 0.3s;
-}
-
-.whatsapp-float:hover{
-    transform: scale(1.08);
-}
-
-.whatsapp-float img{
-    width: 34px;
-    height: 34px;
-}
-
-@media(max-width:768px){
-
-    .whatsapp-float{
-        width: 55px;
-        height: 55px;
-        bottom: 20px;
-        right: 20px;
-    }
-
-    .whatsapp-float img{
-        width: 30px;
-        height: 30px;
-    }
-}
-</style>
-
 </head>
 <body>
 
@@ -205,13 +179,14 @@ require_once __DIR__ . '/../database.php';
         if ($result && $result->num_rows > 0) {
 
             while ($row = $result->fetch_assoc()) {
+                $images = service_images($row['imagem'] ?? '');
         ?>
 
             <a href="servico.php?id=<?= $row['id'] ?>" style="text-decoration:none; color:inherit;">
     <div class="service-card">
 
-        <?php if (!empty($row['imagem'])): ?>
-            <img src="/laboratorio/images/<?= htmlspecialchars($row['imagem']) ?>">
+        <?php if (!empty($images)): ?>
+            <img src="/LabInSmile/images/<?= htmlspecialchars($images[0]) ?>" alt="<?= htmlspecialchars($row['nome']) ?>">
         <?php endif; ?>
         <h3><?= htmlspecialchars($row['nome']) ?></h3>
     </div>

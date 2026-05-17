@@ -1,6 +1,16 @@
 <?php
 session_start();
-require_once __DIR__ . '/../database.php';
+require_once __DIR__ . '/../config.php';
+
+if (!isset($_SESSION['user_id'])) {
+    $redirect = 'servicos.php';
+    if (isset($_GET['id'])) {
+        $redirect = 'servico.php?id=' . urlencode((string)$_GET['id']);
+    }
+    $_SESSION['redirect_after_login'] = $redirect;
+    header('Location: login.php');
+    exit;
+}
 
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
@@ -20,6 +30,22 @@ if (!$result || $result->num_rows == 0) {
 }
 
 $servico = $result->fetch_assoc();
+
+function service_images($value) {
+    $value = trim((string)$value);
+    if ($value === '') {
+        return [];
+    }
+
+    $decoded = json_decode($value, true);
+    if (is_array($decoded)) {
+        return array_values(array_filter($decoded, 'is_string'));
+    }
+
+    return [$value];
+}
+
+$service_images = service_images($servico['imagem'] ?? '');
 
 $mensagem_sucesso = "";
 $errors = [];
@@ -68,6 +94,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             if ($stmt->execute()) {
                 $mensagem_sucesso = "Marcação feita com sucesso!";
+
+                // Notificar laboratório por email sobre o novo pedido/agendamento
+                $subject = "Pedido de Orçamento / Agendamento: " . (isset($servico['nome']) ? $servico['nome'] : 'Serviço');
+                $body_mail = "Serviço: " . (isset($servico['nome']) ? $servico['nome'] : '') . "\n";
+                $body_mail .= "Nome: $nome\nEmail: $email\nTelefone: $telefone\nMensagem: $mensagem\nData: $data_marcacao\nHora: $hora_marcacao\n";
+
+                if (function_exists('send_lab_email')) {
+                    $mail_ok = send_lab_email($subject, $body_mail, $email);
+                } elseif (function_exists('mail')) {
+                    $to = defined('LAB_EMAIL') ? LAB_EMAIL : 'labinsmile@gmail.com';
+                    $headers = "From: $email\r\nReply-To: $email\r\nContent-Type: text/plain; charset=UTF-8";
+                    $mail_ok = @mail($to, $subject, $body_mail, $headers);
+                }
+
             } else {
                 $errors[] = "Erro ao guardar a marcação.";
             }
@@ -105,10 +145,83 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
     border-radius:10px;
 }
 
-.service-detail img {
-    width: 100%;
+.service-carousel {
+    background: #fff;
     border-radius: 14px;
     box-shadow: 0 12px 30px rgba(16,24,40,0.12);
+    overflow: hidden;
+    position: relative;
+}
+
+.service-carousel-track {
+    display: flex;
+    transition: transform .28s ease;
+}
+
+.service-carousel-slide {
+    flex: 0 0 100%;
+}
+
+.service-carousel img,
+.service-detail > img {
+    width: 100%;
+    display: block;
+    aspect-ratio: 4 / 3;
+    border-radius: 14px;
+    object-fit: cover;
+}
+
+.service-carousel img {
+    border-radius: 0;
+}
+
+.carousel-control {
+    align-items: center;
+    background: rgba(255,255,255,0.9);
+    border: 0;
+    border-radius: 50%;
+    color: #0b6e4f;
+    cursor: pointer;
+    display: flex;
+    font-size: 26px;
+    height: 42px;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+}
+
+.carousel-control.prev {
+    left: 12px;
+}
+
+.carousel-control.next {
+    right: 12px;
+}
+
+.carousel-dots {
+    bottom: 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    left: 0;
+    position: absolute;
+    right: 0;
+}
+
+.carousel-dot {
+    background: rgba(255,255,255,0.7);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    height: 10px;
+    padding: 0;
+    width: 10px;
+}
+
+.carousel-dot.active {
+    background: #0b6e4f;
 }
 
 .service-detail p {
@@ -282,53 +395,6 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
     .schedule-grid{grid-template-columns:1fr;}
 }
 </style>
-
-<style>
-.whatsapp-float{
-    position: fixed;
-    width: 60px;
-    height: 60px;
-    bottom: 25px;
-    right: 25px;
-    z-index: 9999;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #25D366;
-    border-radius: 50%;
-
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-
-    transition: 0.3s;
-}
-
-.whatsapp-float:hover{
-    transform: scale(1.08);
-}
-
-.whatsapp-float img{
-    width: 34px;
-    height: 34px;
-}
-
-@media(max-width:768px){
-
-    .whatsapp-float{
-        width: 55px;
-        height: 55px;
-        bottom: 20px;
-        right: 20px;
-    }
-
-    .whatsapp-float img{
-        width: 30px;
-        height: 30px;
-    }
-}
-</style>
-
 </head>
 
 <body>
@@ -341,7 +407,26 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 <div class="product-grid">
 
     <div class="service-detail">
-        <img src="/laboratorio/images/<?= htmlspecialchars($servico['imagem']) ?>">
+        <?php if (count($service_images) > 1): ?>
+            <div class="service-carousel" data-carousel>
+                <div class="service-carousel-track">
+                    <?php foreach ($service_images as $image): ?>
+                        <div class="service-carousel-slide">
+                            <img src="/LabInSmile/images/<?= htmlspecialchars($image) ?>" alt="<?= htmlspecialchars($servico['nome']) ?>">
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="carousel-control prev" data-carousel-prev aria-label="Imagem anterior">&lsaquo;</button>
+                <button type="button" class="carousel-control next" data-carousel-next aria-label="Imagem seguinte">&rsaquo;</button>
+                <div class="carousel-dots">
+                    <?php foreach ($service_images as $index => $image): ?>
+                        <button type="button" class="carousel-dot<?= $index === 0 ? ' active' : '' ?>" data-carousel-dot="<?= $index ?>" aria-label="Ver imagem <?= $index + 1 ?>"></button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php elseif (count($service_images) === 1): ?>
+            <img src="/LabInSmile/images/<?= htmlspecialchars($service_images[0]) ?>" alt="<?= htmlspecialchars($servico['nome']) ?>">
+        <?php endif; ?>
 
         <p><?= nl2br(htmlspecialchars($servico['descricao'])) ?></p>
     </div>
@@ -422,6 +507,29 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 </main>
 
 <script>
+document.querySelectorAll('[data-carousel]').forEach(carousel => {
+    const track = carousel.querySelector('.service-carousel-track');
+    const slides = carousel.querySelectorAll('.service-carousel-slide');
+    const dots = carousel.querySelectorAll('[data-carousel-dot]');
+    const prev = carousel.querySelector('[data-carousel-prev]');
+    const next = carousel.querySelector('[data-carousel-next]');
+    let current = 0;
+
+    function showSlide(index) {
+        current = (index + slides.length) % slides.length;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        dots.forEach((dot, dotIndex) => dot.classList.toggle('active', dotIndex === current));
+    }
+
+    if (prev && next && slides.length > 1) {
+        prev.addEventListener('click', () => showSlide(current - 1));
+        next.addEventListener('click', () => showSlide(current + 1));
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => showSlide(Number(dot.dataset.carouselDot || 0)));
+        });
+    }
+});
+
 const dataInput = document.getElementById('data_marcacao');
 const horaSelect = document.getElementById('hora_marcacao');
 const scheduleStatus = document.getElementById('schedule-status');

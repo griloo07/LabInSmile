@@ -138,53 +138,6 @@ require_once __DIR__ . '/../config.php';
             nav a { flex: 1; text-align: center; }
         }
     </style>
-
-<style>
-.whatsapp-float{
-    position: fixed;
-    width: 60px;
-    height: 60px;
-    bottom: 25px;
-    right: 25px;
-    z-index: 9999;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #25D366;
-    border-radius: 50%;
-
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-
-    transition: 0.3s;
-}
-
-.whatsapp-float:hover{
-    transform: scale(1.08);
-}
-
-.whatsapp-float img{
-    width: 34px;
-    height: 34px;
-}
-
-@media(max-width:768px){
-
-    .whatsapp-float{
-        width: 55px;
-        height: 55px;
-        bottom: 20px;
-        right: 20px;
-    }
-
-    .whatsapp-float img{
-        width: 30px;
-        height: 30px;
-    }
-}
-</style>
-
 </head>
 <body>
 

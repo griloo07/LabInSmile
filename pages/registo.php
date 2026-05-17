@@ -10,6 +10,11 @@ if (!isset($_SESSION['csrf_token'])) {
 $errors = [];
 $success_message = '';
 
+if (isset($_SESSION['user_id'])) {
+    header('Location: servicos.php');
+    exit;
+}
+
 // processar envio
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'register') {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
@@ -53,8 +58,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 're
             $stmt->bind_param('ssss', $email, $hash, $name, $role);
             
             if ($stmt->execute()) {
-                $success_message = 'Conta criada com sucesso. Pode agora <a href="login.php">entrar</a>.';
-                $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+                $_SESSION['user_id'] = $stmt->insert_id;
+                $_SESSION['user_email'] = $email;
+                $_SESSION['user_name'] = $name;
+                $_SESSION['role'] = $role;
+                session_regenerate_id(true);
+
+                unset($_SESSION['redirect_after_login']);
+                header('Location: servicos.php');
+                exit;
             } else {
                 $errors[] = 'Não foi possível gravar a conta no servidor: ' . $stmt->error;
             }

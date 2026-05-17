@@ -24,12 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
         if (strlen($mensagem) < 10) $errors[] = 'A mensagem deve ter pelo menos 10 caracteres.';
 
         if (empty($errors)) {
-            $to = 'labinsmile@gmail.com';
             $body = "Nome: $nome\nEmail: $email\nTelefone: $telefone\nAssunto: $assunto\n\nMensagem:\n$mensagem";
-            $headers = "From: $email\nReply-To: $email\nContent-Type: text/plain; charset=UTF-8";
-
             $mail_ok = false;
-            if (function_exists('mail')) {
+            if (function_exists('send_lab_email')) {
+                $mail_ok = send_lab_email($assunto, $body, $email);
+            } elseif (function_exists('mail')) {
+                $to = defined('LAB_EMAIL') ? LAB_EMAIL : 'labinsmile@gmail.com';
+                $headers = "From: $email\r\nReply-To: $email\r\nContent-Type: text/plain; charset=UTF-8";
                 $mail_ok = @mail($to, $assunto, $body, $headers);
             }
 
@@ -228,53 +229,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
             nav a { flex: 1; text-align: center; }
         }
     </style>
-
-<style>
-.whatsapp-float{
-    position: fixed;
-    width: 60px;
-    height: 60px;
-    bottom: 25px;
-    right: 25px;
-    z-index: 9999;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #25D366;
-    border-radius: 50%;
-
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-
-    transition: 0.3s;
-}
-
-.whatsapp-float:hover{
-    transform: scale(1.08);
-}
-
-.whatsapp-float img{
-    width: 34px;
-    height: 34px;
-}
-
-@media(max-width:768px){
-
-    .whatsapp-float{
-        width: 55px;
-        height: 55px;
-        bottom: 20px;
-        right: 20px;
-    }
-
-    .whatsapp-float img{
-        width: 30px;
-        height: 30px;
-    }
-}
-</style>
-
 </head>
 <body>
 
