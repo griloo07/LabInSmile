@@ -194,7 +194,7 @@ label {
 .contact-form label { display: block; font-weight: bold; margin-bottom: 6px; color: var(--text); }
 .contact-form input, .contact-form textarea { width:100%; padding:10px; margin-bottom:16px; border:1px solid #e5e7eb; border-radius:6px; font-family: inherit; }
 .contact-form input:focus, .contact-form textarea:focus { outline:none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(11,110,79,0.1); }
-.contact-form button { background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: bold; cursor:pointer; width:100%; }
+.contact-form button { background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.3s; width:100%; }
 .contact-form button:hover { background: var(--primary-700); transform: translateY(-2px); }
 
 /* Force stacked labels and full-width rounded inputs in the product/contact form */

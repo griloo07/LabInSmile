@@ -13,12 +13,12 @@ if (!isset($_SESSION['csrf_token'])) {
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
     <title>LabInSmile - Próteses Dentárias</title>
 
-    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
+    <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
 </head>
 
 <body class="has-bg">
 
-<?php require_once __DIR__ . '/../inc/site_header.php'; ?>
+<?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
 <main>
 

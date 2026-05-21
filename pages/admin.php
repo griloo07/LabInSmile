@@ -126,7 +126,7 @@ if (isset($_GET['edit'])) {
 <head>
     <meta charset="utf-8">
     <title>Painel Admin - LabInSmile</title>
-    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
+    <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
         .admin-wrap { max-width:1100px; margin:20px auto; padding:20px; }
         .card { background:#fff; padding:15px; border-radius:8px; box-shadow:0 1px 6px rgba(0,0,0,0.05); }

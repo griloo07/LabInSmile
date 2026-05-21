@@ -8,7 +8,7 @@ require_once __DIR__ . '/../config.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
     <title>Especialidades - LabInSmile</title>
-    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
+    <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -141,7 +141,7 @@ require_once __DIR__ . '/../config.php';
 </head>
 <body>
 
-<?php require_once __DIR__ . '/../inc/site_header.php'; ?>
+<?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
 <main>
     <div class="container">

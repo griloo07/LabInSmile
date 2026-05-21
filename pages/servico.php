@@ -130,7 +130,7 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 <head>
 <meta charset="UTF-8">
 <title><?= htmlspecialchars($servico['nome']) ?></title>
-<?php require_once __DIR__ . '/../inc/site_head.php'; ?>
+<?php require_once __DIR__ . '/../includes/site_head.php'; ?>
 
 <style>
 .product-grid {
@@ -399,7 +399,7 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 
 <body>
 
-<?php require_once __DIR__ . '/../inc/site_header.php'; ?>
+<?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
 <main>
 <div class="container">

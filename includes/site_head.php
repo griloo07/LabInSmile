@@ -2,4 +2,4 @@
 // Common head includes: favicon and global stylesheet
 ?>
     <link rel="icon" href="/LabInSmile/images/logo_labinsmile.png">
-    <link rel="stylesheet" href="/LabInSmile/style.css">
+    <link rel="stylesheet" href="/LabInSmile/assets/css/style.css">
