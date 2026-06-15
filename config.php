@@ -124,10 +124,12 @@ function send_lab_email($subject, $body, $from_email = null) {
             if (defined('SMTP_HOST') && SMTP_HOST) {
                 $mail->isSMTP();
                 $mail->Host = SMTP_HOST;
-                $mail->SMTPAuth = defined('SMTP_USER') && defined('SMTP_PASS') && SMTP_USER && SMTP_PASS;
+                $smtp_user = defined('SMTP_USER') ? constant('SMTP_USER') : null;
+                $smtp_pass = defined('SMTP_PASS') ? constant('SMTP_PASS') : null;
+                $mail->SMTPAuth = !empty($smtp_user) && !empty($smtp_pass);
                 if ($mail->SMTPAuth) {
-                    $mail->Username = SMTP_USER;
-                    $mail->Password = SMTP_PASS;
+                    $mail->Username = $smtp_user;
+                    $mail->Password = $smtp_pass;
                 }
                 $mail->SMTPSecure = defined('SMTP_SECURE') ? SMTP_SECURE : 'tls';
                 $mail->Port = defined('SMTP_PORT') ? SMTP_PORT : 587;
@@ -149,8 +151,8 @@ function send_lab_email($subject, $body, $from_email = null) {
 
     // If SMTP is configured and PHPMailer unavailable, try native SMTP implementation
     if (defined('SMTP_HOST') && SMTP_HOST) {
-        $smtp_user = defined('SMTP_USER') ? SMTP_USER : null;
-        $smtp_pass = defined('SMTP_PASS') ? SMTP_PASS : null;
+        $smtp_user = defined('SMTP_USER') ? constant('SMTP_USER') : null;
+        $smtp_pass = defined('SMTP_PASS') ? constant('SMTP_PASS') : null;
         $smtp_port = defined('SMTP_PORT') ? SMTP_PORT : (defined('SMTP_SECURE') && SMTP_SECURE === 'ssl' ? 465 : 587);
         $smtp_secure = defined('SMTP_SECURE') ? SMTP_SECURE : 'tls';
         $smtp_ok = send_smtp(SMTP_HOST, $smtp_port, $smtp_user, $smtp_pass, $from, $to, $subject, $body, $smtp_secure);

@@ -23,34 +23,42 @@ function service_images($value) {
 }
 
 function ensure_service_tag_tables($conn) {
-    $conn->query("
-        CREATE TABLE IF NOT EXISTS tags (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            nome VARCHAR(100) NOT NULL,
-            slug VARCHAR(120) NOT NULL UNIQUE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    ");
+    $conn->query("CREATE TABLE IF NOT EXISTS tags (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL,
+        slug VARCHAR(120) NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    $conn->query("
-        CREATE TABLE IF NOT EXISTS service_tags (
-            service_id INT NOT NULL,
-            tag_id INT NOT NULL,
-            PRIMARY KEY (service_id, tag_id),
-            CONSTRAINT fk_service_tags_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE,
-            CONSTRAINT fk_service_tags_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        </div>
-    </main>
+    $conn->query("CREATE TABLE IF NOT EXISTS service_tags (
+        service_id INT NOT NULL,
+        tag_id INT NOT NULL,
+        PRIMARY KEY (service_id, tag_id),
+        CONSTRAINT fk_service_tags_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE,
+        CONSTRAINT fk_service_tags_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
 
-    <?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
+function get_all_tags($conn) {
+    $tags = [];
+    $res = $conn->query("SELECT id, nome, slug FROM tags ORDER BY nome ASC");
+    if ($res) {
+        while ($row = $res->fetch_assoc()) {
+            $tags[] = $row;
+        }
+    }
+    return $tags;
+}
 
-    <script>
+function get_service_tags_map($conn) {
+    $map = [];
+    $sql = "SELECT st.service_id, t.id, t.nome, t.slug FROM service_tags st INNER JOIN tags t ON t.id = st.tag_id ORDER BY t.nome ASC";
+    $res = $conn->query($sql);
+    if ($res) {
+        while ($row = $res->fetch_assoc()) {
             $serviceId = (int)$row['service_id'];
-            if (!isset($map[$serviceId])) {
-                $map[$serviceId] = [];
-            }
-            $map[$serviceId][] = ['id' => (int)$row['id'], 'nome' => $row['nome']];
+            if (!isset($map[$serviceId])) $map[$serviceId] = [];
+            $map[$serviceId][] = ['id' => (int)$row['id'], 'nome' => $row['nome'], 'slug' => $row['slug']];
         }
     }
     return $map;
