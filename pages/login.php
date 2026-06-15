@@ -332,7 +332,7 @@ if (!isset($_SESSION['csrf_token'])) {
         </form>
         <script>
             document.querySelector('form').addEventListener('submit', function(e) {
-                console.log('login form submitted');
+                // Debug removed in cleanup: console.log('login form submitted');
             });
         </script>
         <div class="login-footer">
