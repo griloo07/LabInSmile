@@ -58,11 +58,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
         if ($action === 'create') {
-            $titulo = trim($_POST['titulo'] ?? '');
-            $descricao = trim($_POST['descricao'] ?? '');
+            // Admin panel now asks for `categoria` instead of `titulo` and no description is required.
+            $categoria = trim($_POST['categoria'] ?? '');
             $imagem = portfolio_images_value(json_decode($_POST['imagem'] ?? '[]', true) ?: [$_POST['imagem'] ?? '']);
+            $titulo = $categoria; // store category in the existing `titulo` column for compatibility
+            $descricao = '';
 
-            if ($titulo && $descricao) {
+            if ($titulo) {
                 $stmt = $conn->prepare('INSERT INTO portfolio (titulo, descricao, imagem) VALUES (?, ?, ?)');
                 $stmt->bind_param('sss', $titulo, $descricao, $imagem);
                 if ($stmt->execute()) {
@@ -75,17 +77,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt->close();
             } else {
-                $mensagem = 'Preenche todos os campos.';
+                $mensagem = 'Preenche a categoria.';
                 if ($isAjax) $ajaxResponse['message'] = $mensagem;
             }
 
         } elseif ($action === 'update') {
             $id = intval($_POST['id'] ?? 0);
-            $titulo = trim($_POST['titulo'] ?? '');
-            $descricao = trim($_POST['descricao'] ?? '');
+            $categoria = trim($_POST['categoria'] ?? '');
             $imagem = portfolio_images_value(json_decode($_POST['imagem'] ?? '[]', true) ?: [$_POST['imagem'] ?? '']);
+            $titulo = $categoria;
+            $descricao = '';
 
-            if ($id && $titulo && $descricao) {
+            if ($id && $titulo) {
                 $stmt = $conn->prepare('UPDATE portfolio SET titulo = ?, descricao = ?, imagem = ? WHERE id = ?');
                 $stmt->bind_param('sssi', $titulo, $descricao, $imagem, $id);
                 if ($stmt->execute()) {
@@ -157,7 +160,10 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
         body{font-family:Arial,Helvetica,sans-serif;margin:20px;color:#111}
         .btn{display:inline-block;padding:8px 12px;background:#0b6e4f;color:#fff;border-radius:6px;text-decoration:none}
         .card{background:#fff;padding:12px;border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05)}
-        .image-preview img{width:90px;height:70px;object-fit:cover;border-radius:6px}
+        .image-preview { display:flex; gap:8px; align-items:flex-start; }
+        .image-preview .preview-item { position:relative; display:inline-block; }
+        .image-preview img{width:90px;height:70px;object-fit:cover;border-radius:6px;display:block}
+        .image-preview .remove-image { position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; border:0; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; line-height:1 }
         .product{border:1px solid #eee;padding:10px;margin:10px 0;display:flex;gap:12px}
         .product img{width:100px;height:auto;border-radius:6px}
         .actions form{display:inline-block;margin-left:8px}
@@ -180,13 +186,8 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
             <input type="hidden" name="imagem" id="form-imagem" value="<?= htmlspecialchars($edit_item['imagem'] ?? '') ?>">
 
             <div>
-                <label>Título</label><br>
-                <input type="text" name="titulo" id="form-titulo" required value="<?= htmlspecialchars($edit_item['titulo'] ?? '') ?>">
-            </div>
-
-            <div>
-                <label>Descrição</label><br>
-                <textarea name="descricao" id="form-descricao" required><?= htmlspecialchars($edit_item['descricao'] ?? '') ?></textarea>
+                <label>Categoria</label><br>
+                <input type="text" name="categoria" id="form-categoria" required value="<?= htmlspecialchars($edit_item['titulo'] ?? '') ?>">
             </div>
 
             <div>
@@ -194,7 +195,10 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
                 <div style="display:flex; gap:12px; align-items:flex-start">
                     <div id="preview" class="image-preview">
                         <?php foreach (portfolio_images($edit_item['imagem'] ?? '') as $image): ?>
-                            <img src="/LabInSmile/images/<?= htmlspecialchars($image) ?>" alt="">
+                            <div class="preview-item" data-filename="<?= htmlspecialchars($image, ENT_QUOTES) ?>">
+                                <img src="/LabInSmile/images/<?= htmlspecialchars($image) ?>" alt="">
+                                <button type="button" class="remove-image" data-filename="<?= htmlspecialchars($image, ENT_QUOTES) ?>" aria-label="Remover imagem">&times;</button>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                     <div>
@@ -217,14 +221,13 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
     <div id="items-list">
         <?php if ($result && $result->num_rows > 0): ?>
             <?php while ($row = $result->fetch_assoc()): ?>
-                <?php $imgs = portfolio_images($row['imagem']); ?>
-                <div class="product card" id="item-<?= intval($row['id']) ?>" data-id="<?= intval($row['id']) ?>" data-titulo="<?= htmlspecialchars($row['titulo'], ENT_QUOTES) ?>" data-descricao="<?= htmlspecialchars($row['descricao'], ENT_QUOTES) ?>" data-imagem="<?= htmlspecialchars($row['imagem'], ENT_QUOTES) ?>">
+                    <?php $imgs = portfolio_images($row['imagem']); ?>
+                <div class="product card" id="item-<?= intval($row['id']) ?>" data-id="<?= intval($row['id']) ?>" data-titulo="<?= htmlspecialchars($row['titulo'], ENT_QUOTES) ?>" data-imagem="<?= htmlspecialchars($row['imagem'], ENT_QUOTES) ?>">
                     <?php if (!empty($imgs)): ?>
                         <div><img src="/LabInSmile/images/<?= htmlspecialchars($imgs[0]) ?>" alt="<?= htmlspecialchars($row['titulo']) ?>"></div>
                     <?php endif; ?>
                     <div style="flex:1">
                         <strong><?= htmlspecialchars($row['titulo']) ?></strong>
-                        <p><?= nl2br(htmlspecialchars(substr($row['descricao'],0,300))) ?></p>
                     </div>
                     <div class="actions">
                         <a href="#" class="btn-edit">Editar</a>
@@ -264,8 +267,14 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
     }
 
     function renderPreview(target, images) {
-        target.innerHTML = images.map(filename => '<img src="/LabInSmile/images/' + filename + '" alt="">').join('');
+        target.innerHTML = images.map(filename => (
+            '<div class="preview-item" data-filename="' + filename.replace(/"/g, '&quot;') + '">' +
+                '<img src="/LabInSmile/images/' + filename + '" alt="">' +
+                '<button type="button" class="remove-image" data-filename="' + filename.replace(/"/g, '&quot;') + '" aria-label="Remover imagem">&times;</button>' +
+            '</div>'
+        )).join('');
     }
+    
 
     async function addFiles(files, input, target, statusTarget) {
         const selected = Array.from(files || []);
@@ -296,6 +305,20 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
         imageInput.addEventListener('change', function() { addFiles(this.files, formImagem, preview, uploadStatus); });
     }
 
+    // Delegate remove clicks from preview container (attach after element is available)
+    if (preview) {
+        preview.addEventListener('click', function(e){
+            const btn = e.target.closest('.remove-image');
+            if (!btn) return;
+            const filename = btn.dataset.filename;
+            const images = parseImages(formImagem.value);
+            const idx = images.indexOf(filename);
+            if (idx !== -1) images.splice(idx, 1);
+            storeImages(formImagem, images);
+            renderPreview(preview, images);
+        });
+    }
+
     // Edit handlers
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', function(e){
@@ -303,8 +326,8 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
             const card = this.closest('.product');
             if (!card) return;
             document.getElementById('form-id').value = card.dataset.id || '';
-            document.getElementById('form-titulo').value = card.dataset.titulo || '';
-            document.getElementById('form-descricao').value = card.dataset.descricao || '';
+            // Admin edits the category (stored in `titulo` column)
+            document.getElementById('form-categoria').value = card.dataset.titulo || '';
             document.getElementById('form-imagem').value = card.dataset.imagem || '';
             renderPreview(preview, parseImages(card.dataset.imagem || ''));
             document.getElementById('form-action').value = 'update';
@@ -317,8 +340,7 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
     document.getElementById('form-cancel').addEventListener('click', function(){
         document.getElementById('form-action').value = 'create';
         document.getElementById('form-id').value = '';
-        document.getElementById('form-titulo').value = '';
-        document.getElementById('form-descricao').value = '';
+        document.getElementById('form-categoria').value = '';
         document.getElementById('form-imagem').value = '';
         renderPreview(preview, []);
         this.style.display = 'none';
@@ -333,21 +355,9 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
             if (json.success) {
                 const action = fd.get('action');
                 if (action === 'create') {
-                    const item = json.item || { id: json.id, titulo: fd.get('titulo'), descricao: fd.get('descricao'), imagem: fd.get('imagem') };
-                    const container = document.getElementById('items-list');
-                    // prepend
-                    const div = document.createElement('div');
-                    div.innerHTML = '<div class="product card" id="item-'+item.id+'">'+
-                        '<strong>'+item.titulo+'</strong>'+
-                        '<p>'+ (item.descricao||'') +'</p>'+
-                    '</div>';
-                    if (container) container.insertAdjacentHTML('afterbegin', '<div class="product card" id="item-'+item.id+'"> <strong>'+item.titulo+'</strong><p>' + (item.descricao||'') + '</p></div>');
-                    this.reset();
-                    renderPreview(preview, []);
-                    document.getElementById('form-action').value = 'create';
-                    document.getElementById('form-cancel').style.display = 'none';
-                    uploadStatus.textContent = '';
+                    // Reload after creating a new item to refresh the admin list
                     alert(json.message || 'Exemplo adicionado.');
+                    window.location.reload();
                 } else if (action === 'update') {
                     alert(json.message || 'Exemplo atualizado.');
                     window.location.reload();

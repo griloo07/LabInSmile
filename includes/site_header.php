@@ -23,6 +23,8 @@ if ($__current_uri && strpos($__current_uri, '/login.php') === false) {
                     <a href="contacto.php">Contacto</a>
                 </nav>
 
+                <!-- header CTAs removed per user request -->
+
                 <div class="auth-buttons">
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <span class="user-info">Olá, <?= htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']) ?></span>
@@ -50,4 +52,5 @@ header .auth-buttons .btn-admin {
     font-weight: 700 !important;
     text-decoration: none !important;
 }
+/* header CTAs removed — no extra header buttons */
 </style>

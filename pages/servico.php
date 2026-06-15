@@ -627,17 +627,7 @@ if (dataInput) {
 }
 </script>
 
-<a
-    href="https://wa.me/351967544606?text=Olá,%20gostaria%20de%20obter%20mais%20informações."
-    class="whatsapp-float"
-    target="_blank"
->
+<?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
 
-    <img
-        src="/LabInSmile/images/whatsapp.png"
-        alt="WhatsApp"
-    >
-
-</a>
 </body>
 </html>

@@ -40,31 +40,12 @@ function ensure_service_tag_tables($conn) {
             CONSTRAINT fk_service_tags_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE,
             CONSTRAINT fk_service_tags_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    ");
-}
+        </div>
+    </main>
 
-function get_all_tags($conn) {
-    $tags = [];
-    $result = $conn->query("SELECT id, nome, slug FROM tags ORDER BY nome ASC");
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $tags[] = $row;
-        }
-    }
-    return $tags;
-}
+    <?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
 
-function get_service_tags_map($conn) {
-    $map = [];
-    $sql = "
-        SELECT st.service_id, t.id, t.nome
-        FROM service_tags st
-        INNER JOIN tags t ON t.id = st.tag_id
-        ORDER BY t.nome ASC
-    ";
-    $result = $conn->query($sql);
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
+    <script>
             $serviceId = (int)$row['service_id'];
             if (!isset($map[$serviceId])) {
                 $map[$serviceId] = [];
