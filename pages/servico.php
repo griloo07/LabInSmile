@@ -130,7 +130,7 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 <head>
 <meta charset="UTF-8">
 <title><?= htmlspecialchars($servico['nome']) ?></title>
-<?php require_once __DIR__ . '/../inc/site_head.php'; ?>
+<?php require_once __DIR__ . '/../includes/site_head.php'; ?>
 
 <style>
 .product-grid {
@@ -399,10 +399,14 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 
 <body>
 
-<?php require_once __DIR__ . '/../inc/site_header.php'; ?>
+<?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
 <main>
 <div class="container">
+
+    <div style="margin-bottom:12px;">
+        <a href="/LabInSmile/pages/servicos.php" id="btn-voltar" style="text-decoration:none; display:inline-block; padding:8px 12px; background:#0b6e4f; color:#fff; border-radius:6px;">← Voltar</a>
+    </div>
 
 <div class="product-grid">
 
@@ -507,6 +511,21 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 </main>
 
 <script>
+// Back button behavior: prefer referrer to avoid returning to an empty form
+;(function(){
+    const btnVoltar = document.getElementById('btn-voltar');
+    if (!btnVoltar) return;
+    btnVoltar.addEventListener('click', function(e){
+        e.preventDefault();
+        const ref = document.referrer || '';
+        if (ref && ref.indexOf('servicos.php') !== -1) {
+            window.location.href = ref;
+        } else {
+            window.location.href = '/LabInSmile/pages/servicos.php';
+        }
+    });
+})();
+
 document.querySelectorAll('[data-carousel]').forEach(carousel => {
     const track = carousel.querySelector('.service-carousel-track');
     const slides = carousel.querySelectorAll('.service-carousel-slide');
@@ -608,17 +627,7 @@ if (dataInput) {
 }
 </script>
 
-<a
-    href="https://wa.me/351967544606?text=Olá,%20gostaria%20de%20obter%20mais%20informações."
-    class="whatsapp-float"
-    target="_blank"
->
+<?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
 
-    <img
-        src="/LabInSmile/images/whatsapp.png"
-        alt="WhatsApp"
-    >
-
-</a>
 </body>
 </html>

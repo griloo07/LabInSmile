@@ -23,7 +23,7 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Gerir Utilizadores</title>
-    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
+    <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
         body{font-family:Arial,Helvetica,sans-serif;margin:20px;color:#111}
         table{border-collapse:collapse;width:100%;max-width:900px}

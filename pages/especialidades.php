@@ -8,7 +8,7 @@ require_once __DIR__ . '/../config.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
     <title>Especialidades - LabInSmile</title>
-    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
+    <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -141,7 +141,7 @@ require_once __DIR__ . '/../config.php';
 </head>
 <body>
 
-<?php require_once __DIR__ . '/../inc/site_header.php'; ?>
+<?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
 <main>
     <div class="container">
@@ -180,30 +180,10 @@ require_once __DIR__ . '/../config.php';
         </div>
 
     </div>
+    </div>
 </main>
 
-<footer>
-    <div class="container">
-        <strong>LabInSmile - Próteses Dentárias</strong>
-        <p>Telefone: +351 967 544 606</p>
-        <p>Email: labinsmile@gmail.com</p>
-        <p>Morada: Avenida da República, Nº 74 1.º Andar Sala 1 Paredes</p>
-    </div>
-</footer>
+<?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
 
-</footer>
-
-<a
-    href="https://wa.me/351967544606?text=Olá,%20gostaria%20de%20obter%20mais%20informações."
-    class="whatsapp-float"
-    target="_blank"
->
-
-    <img
-        src="/LabInSmile/images/whatsapp.png"
-        alt="WhatsApp"
-    >
-
-</a>
 </body>
 </html>

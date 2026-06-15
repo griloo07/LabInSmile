@@ -16,7 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
         $nome      = trim($_POST['nome'] ?? '');
         $email     = trim($_POST['email'] ?? '');
         $telefone  = trim($_POST['telefone'] ?? '');
-        $assunto   = trim($_POST['assunto'] ?? 'Pedido de Orçamento');
+        $assunto   = trim($_POST['assunto'] ?? '');
+        if ($assunto === '') $assunto = 'Pedido de Orçamento';
         $mensagem  = trim($_POST['mensagem'] ?? '');
 
         if (strlen($nome) < 2) $errors[] = 'Indique o seu nome.';
@@ -55,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
     <title>Contacto - LabInSmile</title>
-    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
+    <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -232,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
 </head>
 <body>
 
-<?php require_once __DIR__ . '/../inc/site_header.php'; ?>
+<?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
 <main>
     <div class="container">
@@ -296,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
                     <input type="text" id="telefone" name="telefone">
 
                     <label for="assunto">Assunto</label>
-                    <input type="text" id="assunto" name="assunto" value="Pedido de Orçamento">
+                    <input type="text" id="assunto" name="assunto">
 
                     <label for="mensagem">Mensagem</label>
                     <textarea id="mensagem" name="mensagem" rows="6" required></textarea>
@@ -319,29 +320,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
             </iframe>
         </div>
     </div>
+    </div>
 </main>
 
-<footer>
-    <div class="container">
-        <strong>LabInSmile - Próteses Dentárias</strong>
-        <p>Telefone: +351 967 544 606</p>
-        <p>Email: labinsmile@gmail.com</p>
-        <p>Morada: Avenida da República, Nº 74 1.º Andar Sala 1 Paredes</p>
-    </div>
-</footer>
-
-<a
-    href="https://wa.me/351967544606?text=Olá,%20gostaria%20de%20obter%20mais%20informações."
-    class="whatsapp-float"
-    target="_blank"
->
-
-    <img
-        src="/LabInSmile/images/whatsapp.png"
-        alt="WhatsApp"
-    >
-
-</a>
+<?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
 
 </body>
 </html>

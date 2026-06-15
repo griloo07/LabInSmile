@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 're
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registo - Laboratório de Prótese</title>
-    <?php require_once __DIR__ . '/../inc/site_head.php'; ?>
+    <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
         /* reuse same styles as login page */
         :root {
@@ -154,7 +154,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 're
             <button type="submit" class="btn">Criar Conta</button>
         </form>
         <div class="footer">
-            <p>Já tem conta? <a href="login.php">Entrar</a></p>
+            <?php
+                $__login_next = '';
+                if (!empty($_SESSION['redirect_after_login'])) {
+                    $__login_next = '?next=' . urlencode($_SESSION['redirect_after_login']);
+                }
+            ?>
+            <p>Já tem conta? <a href="login.php<?= $__login_next ?>">Entrar</a></p>
             <p><a href="home.php">← Voltar ao site</a></p>
         </div>
     </div>
