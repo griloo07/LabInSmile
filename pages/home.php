@@ -22,17 +22,17 @@ if (!isset($_SESSION['csrf_token'])) {
 
 <main>
 
-    <section class="home-hero">
+    <section class="home-hero" aria-label="Apresentação">
         <div class="container home-hero-inner">
             <div class="home-hero-image">
-                <img src="/LabInSmile/images/fundo estatico.jpeg" alt="LabInSmile">
+                <img src="/LabInSmile/images/fundo estatico.jpeg" alt="Laboratório LabInSmile - próteses dentárias">
             </div>
 
             <div class="home-hero-text">
-                <p>Na LabInSmile acreditamos que cada detalhe faz a diferença.</p>
-                <p>Os nossos trabalhos são desenvolvidos maioritariamente de forma artesanal, com precisão, dedicação e atenção ao detalhe em cada etapa.</p>
-                <p>Valorizamos a estética, o conforto e a naturalidade para garantir resultados de elevada qualidade.</p>
-                <p>O nosso compromisso é entregar soluções fiáveis e acabamentos à altura de cada sorriso.</p>
+                <h1>LabInSmile — Próteses Dentárias de Excelência</h1>
+                <p class="lead">Próteses personalizadas, acabamentos premium e controlo de qualidade rigoroso — soluções pensadas para devolver conforto e estética ao sorriso.</p>
+
+               
             </div>
         </div>
     </section>
@@ -43,6 +43,7 @@ if (!isset($_SESSION['csrf_token'])) {
             <div class="why-box">
 
                 <h2>Porquê Escolher a LabInSmile</h2>
+            
 
                 <div class="expertise-grid">
 
@@ -52,17 +53,6 @@ if (!isset($_SESSION['csrf_token'])) {
                         </p>
                     </div>
 
-                    <div class="expertise-card">
-                        <p class="description">
-                            Equipamento de última geração e atualizado regularmente
-                        </p>
-                    </div>
-
-                    <div class="expertise-card">
-                        <p class="description">
-                            Equipa de profissionais altamente qualificados
-                        </p>
-                    </div>
 
                     <div class="expertise-card">
                         <p class="description">

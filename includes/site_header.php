@@ -1,5 +1,12 @@
 <?php
 // Shared header (logo, nav, auth buttons). Expects session already started.
+
+// Construir parâmetro `next` para o link de login com a página atual, evitando loop para a própria página de login
+$__current_uri = $_SERVER['REQUEST_URI'] ?? '';
+$__login_next = '';
+if ($__current_uri && strpos($__current_uri, '/login.php') === false) {
+    $__login_next = '?next=' . urlencode($__current_uri);
+}
 ?>
 <header>
     <div class="container">
@@ -11,6 +18,7 @@
             <div class="top-right">
                 <nav id="main-nav">
                     <a href="servicos.php">Serviços</a>
+                    <a href="portfolio.php">Portfolio</a>
                     <a href="especialidades.php">Especialidades</a>
                     <a href="contacto.php">Contacto</a>
                 </nav>
@@ -23,7 +31,7 @@
                         <?php endif; ?>
                         <a href="logout.php" class="btn-login">Sair</a>
                     <?php else: ?>
-                        <a href="login.php" class="btn-login">Login</a>
+                        <a href="login.php<?= htmlspecialchars($__login_next, ENT_QUOTES) ?>" class="btn-login">Login</a>
                         <a href="registo.php" class="btn-login">Registar</a>
                     <?php endif; ?>
                 </div>

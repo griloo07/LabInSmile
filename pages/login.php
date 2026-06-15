@@ -13,6 +13,29 @@ if (isset($_SESSION['user_id'])) {
     exit;
 }
 
+// Guardar página de origem passada por GET para redirecionamento pós-login
+if (isset($_GET['next']) && $_GET['next'] !== '') {
+    $next = filter_var($_GET['next'], FILTER_SANITIZE_URL);
+    $parsed = parse_url($next);
+    // aceitar apenas paths locais (sem scheme/host) e sem '//' para evitar open-redirects
+    if (empty($parsed['scheme']) && empty($parsed['host']) && strpos($next, '//') === false) {
+        $_SESSION['redirect_after_login'] = $next;
+    }
+} elseif (!isset($_SESSION['redirect_after_login']) && !empty($_SERVER['HTTP_REFERER'])) {
+    // fallback para HTTP_REFERER quando o referer pertence ao mesmo host
+    $referer = $_SERVER['HTTP_REFERER'];
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $ref_host = parse_url($referer, PHP_URL_HOST);
+    if ($ref_host === $host) {
+        $ref_path = parse_url($referer, PHP_URL_PATH) ?? '';
+        $ref_query = parse_url($referer, PHP_URL_QUERY);
+        if ($ref_query) $ref_path .= '?' . $ref_query;
+        if ($ref_path) {
+            $_SESSION['redirect_after_login'] = $ref_path;
+        }
+    }
+}
+
 // Processar formulário de login
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'login') {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
@@ -47,8 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'lo
                     // Regenerar ID da sessão para segurança
                     session_regenerate_id(true);
 
-                    // Redirecionar para página protegida ou home
-                    $redirect = $_SESSION['redirect_after_login'] ?? 'servicos.php';
+                    // Redirecionar para página protegida ou para o `next` passado pelo formulário/GET
+                    $redirect = $_SESSION['redirect_after_login'] ?? (isset($_POST['next']) ? $_POST['next'] : 'servicos.php');
+                    // sanitizar fallback para evitar open-redirect
+                    $parsed_r = parse_url($redirect);
+                    if (isset($parsed_r['scheme']) || isset($parsed_r['host']) || strpos($redirect, '//') !== false) {
+                        $redirect = 'servicos.php';
+                    }
                     unset($_SESSION['redirect_after_login']);
                     header('Location: ' . $redirect);
                     exit;
@@ -275,6 +303,7 @@ if (!isset($_SESSION['csrf_token'])) {
         <form method="POST">
             <input type="hidden" name="form_type" value="login">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+            <input type="hidden" name="next" value="<?= htmlspecialchars($_SESSION['redirect_after_login'] ?? '') ?>">
             
             <div class="form-group">
                 <label for="email">Email</label>

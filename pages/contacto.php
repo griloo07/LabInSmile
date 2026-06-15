@@ -16,7 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
         $nome      = trim($_POST['nome'] ?? '');
         $email     = trim($_POST['email'] ?? '');
         $telefone  = trim($_POST['telefone'] ?? '');
-        $assunto   = trim($_POST['assunto'] ?? 'Pedido de Orçamento');
+        $assunto   = trim($_POST['assunto'] ?? '');
+        if ($assunto === '') $assunto = 'Pedido de Orçamento';
         $mensagem  = trim($_POST['mensagem'] ?? '');
 
         if (strlen($nome) < 2) $errors[] = 'Indique o seu nome.';
@@ -296,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
                     <input type="text" id="telefone" name="telefone">
 
                     <label for="assunto">Assunto</label>
-                    <input type="text" id="assunto" name="assunto" value="Pedido de Orçamento">
+                    <input type="text" id="assunto" name="assunto">
 
                     <label for="mensagem">Mensagem</label>
                     <textarea id="mensagem" name="mensagem" rows="6" required></textarea>

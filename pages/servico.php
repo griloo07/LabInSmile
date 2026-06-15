@@ -404,6 +404,10 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 <main>
 <div class="container">
 
+    <div style="margin-bottom:12px;">
+        <a href="/LabInSmile/pages/servicos.php" id="btn-voltar" style="text-decoration:none; display:inline-block; padding:8px 12px; background:#0b6e4f; color:#fff; border-radius:6px;">← Voltar</a>
+    </div>
+
 <div class="product-grid">
 
     <div class="service-detail">
@@ -507,6 +511,21 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 </main>
 
 <script>
+// Back button behavior: prefer referrer to avoid returning to an empty form
+;(function(){
+    const btnVoltar = document.getElementById('btn-voltar');
+    if (!btnVoltar) return;
+    btnVoltar.addEventListener('click', function(e){
+        e.preventDefault();
+        const ref = document.referrer || '';
+        if (ref && ref.indexOf('servicos.php') !== -1) {
+            window.location.href = ref;
+        } else {
+            window.location.href = '/LabInSmile/pages/servicos.php';
+        }
+    });
+})();
+
 document.querySelectorAll('[data-carousel]').forEach(carousel => {
     const track = carousel.querySelector('.service-carousel-track');
     const slides = carousel.querySelectorAll('.service-carousel-slide');

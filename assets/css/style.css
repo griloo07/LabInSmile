@@ -277,6 +277,33 @@ label {
     margin-bottom: 0;
 }
 
+.home-hero-text h1{
+    color: var(--primary);
+    font-size: 32px;
+    margin: 0 0 12px;
+    font-weight: 700;
+}
+
+.home-hero-text .lead{
+    font-size: 18px;
+    color: var(--muted);
+    margin-bottom: 16px;
+}
+
+.hero-ctas{display:flex;gap:12px;align-items:center;margin-top:6px}
+
+.btn-secondary{
+    display:inline-block;
+    background:transparent;
+    color:var(--primary);
+    border:1px solid var(--primary);
+    padding:10px 18px;
+    border-radius:8px;
+    text-decoration:none;
+    font-weight:700;
+}
+.btn-secondary:hover{background:rgba(11,110,79,0.06)}
+
 .cta-box{
     background: var(--surface);
     padding: 28px;
@@ -297,8 +324,9 @@ label {
     margin: 18px 0;
 }
 .why-box h2{margin-top:0}
-.why-box .expertise-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.expertise-card{background:transparent;padding:8px;border-radius:8px}
+.why-box .expertise-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+.expertise-card{background:var(--surface);padding:20px;border-radius:8px;border:1px solid #eef5f2;box-shadow:var(--shadow-sm);text-align:center;display:flex;align-items:center;justify-content:center;min-height:110px;box-sizing:border-box}
+.expertise-card .description{margin:0;color:var(--dark);font-weight:600}
 
 /* BOTÃO WHATSAPP */
 
@@ -357,6 +385,8 @@ label {
     .home-hero-image { max-width: 320px; width: 72vw; }
     .home-hero-text { font-size: 16px; line-height: 1.65; padding: 22px; }
     .product-grid { grid-template-columns: 1fr; }
+    /* Reduce expertise grid to 2 columns on medium screens */
+    .why-box .expertise-grid { grid-template-columns: repeat(2,1fr); }
 }
 
 @media (max-width: 800px) {
@@ -389,4 +419,6 @@ label {
     main { padding: 16px; }
     footer { padding: 16px 12px; font-size: 13px; }
     .whatsapp-float { width: 50px; height: 50px; bottom: 18px; right: 18px; }
+    /* Stack expertise grid to single column on small screens */
+    .why-box .expertise-grid { grid-template-columns: 1fr; }
 }
