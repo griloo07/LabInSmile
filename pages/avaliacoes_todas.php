@@ -39,7 +39,7 @@ if ($res_reviews) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Todas as Avaliações — LabInSmile</title>
+    <title>Todas as Avaliações — Lab in Smile</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
         .all-reviews { padding: 36px 16px; max-width:1100px; margin:0 auto }

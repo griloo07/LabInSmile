@@ -335,7 +335,7 @@ $edit_tag_ids = $edit_product ? array_column($service_tags_map[(int)$edit_produc
 <html lang="pt-PT">
 <head>
     <meta charset="utf-8">
-    <title>Painel Admin - LabInSmile</title>
+    <title>Painel Admin - Lab in Smile</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
         .admin-wrap { max-width:1100px; margin:20px auto; padding:20px; }

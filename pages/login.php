@@ -280,7 +280,7 @@ if (!isset($_SESSION['csrf_token'])) {
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>LabInSmile</h1>
+            <h1>Lab in Smile</h1>
             <p>Sistema de Acesso</p>
         </div>
         

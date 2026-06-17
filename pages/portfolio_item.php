@@ -1,7 +1,9 @@
 <?php
+// Iniciar a sessão
 session_start();
 require_once __DIR__ . '/../config.php';
 
+// Obter imagens portfólio
 function portfolio_images($value) {
     $value = trim((string)$value);
     if ($value === '') return [];
@@ -10,6 +12,7 @@ function portfolio_images($value) {
     return [$value];
 }
 
+// Configurar tabela portfólio
 function ensure_portfolio_table($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS portfolio (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -20,14 +23,17 @@ function ensure_portfolio_table($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
+// Inicializar tabela
 ensure_portfolio_table($conn);
 
+// Obter ID item
 $id = intval($_GET['id'] ?? 0);
 if (!$id) {
     header('Location: portfolio.php');
     exit;
 }
 
+// Carregar dados item
 $stmt = $conn->prepare('SELECT * FROM portfolio WHERE id = ? LIMIT 1');
 $stmt->bind_param('i', $id);
 $stmt->execute();
@@ -52,11 +58,11 @@ $desc = $item['descricao'] ?? '';
     <title><?= htmlspecialchars($title) ?> — Portfólio</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
+        /* Estilos do item */
         body { background:#f6f7f9; }
         .container { max-width:1200px; margin:0 auto; padding:36px 18px; }
         .back-link { display:inline-block; margin-bottom:18px; color:var(--primary); text-decoration:none; font-weight:800 }
 
-        /* Single card containing media + info */
         .detail-grid {
             display:grid;
             grid-template-columns: 1fr 360px;
@@ -102,6 +108,7 @@ $desc = $item['descricao'] ?? '';
     <div class="container">
         <a href="portfolio.php" class="back-link">← Voltar ao Portfólio</a>
 
+        <!-- Detalhes do item -->
         <div class="detail-grid">
             <div class="detail-media">
                 <div class="main-wrap">
@@ -120,15 +127,16 @@ $desc = $item['descricao'] ?? '';
 
             <aside class="detail-info">
                 <h1 class="detail-title"><?= htmlspecialchars($title) ?></h1>
-                    <?php if (trim($desc) !== ''): ?>
-                        <div class="detail-desc"><?= nl2br(htmlspecialchars($desc)) ?></div>
-                    <?php endif; ?>
+                <?php if (trim($desc) !== ''): ?>
+                    <div class="detail-desc"><?= nl2br(htmlspecialchars($desc)) ?></div>
+                <?php endif; ?>
             </aside>
         </div>
     </div>
 </main>
 
 <script>
+// Script de navegação
 (() => {
     const images = <?= json_encode(array_values($images)) ?> || [];
     let current = 0;
@@ -162,10 +170,9 @@ $desc = $item['descricao'] ?? '';
         if(e.key === 'Escape') window.location.href = 'portfolio.php';
     });
 
-    // Initialize
+    // Inicializar exibição
     show(0);
 })();
 </script>
-
 </body>
 </html>

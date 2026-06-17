@@ -1,27 +1,29 @@
 <?php
+// Iniciar a sessão
 session_start();
 require_once __DIR__ . '/../config.php';
 
+// Verificar login utilizador
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['redirect_after_login'] = 'servicos.php';
     header('Location: login.php');
     exit;
 }
 
+// Obter imagens serviço
 function service_images($value) {
     $value = trim((string)$value);
     if ($value === '') {
         return [];
     }
-
     $decoded = json_decode($value, true);
     if (is_array($decoded)) {
         return array_values(array_filter($decoded, 'is_string'));
     }
-
     return [$value];
 }
 
+// Configurar tabelas tags
 function ensure_service_tag_tables($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS tags (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -39,6 +41,7 @@ function ensure_service_tag_tables($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
+// Obter todas tags
 function get_all_tags($conn) {
     $tags = [];
     $res = $conn->query("SELECT id, nome, slug FROM tags ORDER BY nome ASC");
@@ -50,6 +53,7 @@ function get_all_tags($conn) {
     return $tags;
 }
 
+// Mapear tags serviços
 function get_service_tags_map($conn) {
     $map = [];
     $sql = "SELECT st.service_id, t.id, t.nome, t.slug FROM service_tags st INNER JOIN tags t ON t.id = st.tag_id ORDER BY t.nome ASC";
@@ -64,6 +68,7 @@ function get_service_tags_map($conn) {
     return $map;
 }
 
+// Inicializar base dados
 ensure_service_tag_tables($conn);
 $all_tags = get_all_tags($conn);
 $service_tags_map = get_service_tags_map($conn);
@@ -73,9 +78,10 @@ $service_tags_map = get_service_tags_map($conn);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
-    <title>Serviços - LabInSmile</title>
+    <title>Serviços - Lab in Smile</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
+        /* Estilos da página */
         * { box-sizing: border-box; }
         nav {
             display: flex;
@@ -94,9 +100,6 @@ $service_tags_map = get_service_tags_map($conn);
             background: #eef2f5;
             color: #0b6e4f;
         }
-        /* Auth button styles moved to global style.css for consistent subtle design */
-
-        /* Page-specific tweaks: slightly larger lab name and button text, ensure vertical alignment */
         header .logo {
             display: inline-flex;
             align-items: center;
@@ -108,15 +111,8 @@ $service_tags_map = get_service_tags_map($conn);
             height: 48px;
             padding: 0 6px;
         }
-
-        /* Slightly larger auth buttons on this page to match request (use global styles) */
-
-          /* Ensure nav and controls align horizontally with logo */
-          .topbar { align-items: center; }
-
-          /* Force the right-side container in header to align contents vertically
-              target the immediate div following the logo anchor */
-          .topbar > div { display: flex; align-items: center; gap: 20px; margin-left: auto; width: auto !important; }
+        .topbar { align-items: center; }
+        .topbar > div { display: flex; align-items: center; gap: 20px; margin-left: auto; width: auto !important; }
         main {
             min-height: calc(100vh - 280px);
             padding: 40px 15px;
@@ -245,20 +241,18 @@ $service_tags_map = get_service_tags_map($conn);
             .services-heading { align-items:flex-start; flex-direction:column; }
         }
     </style>
-<?php /* admin link moved into the header nav (shown only to admins) */ ?>
-
 </head>
 <body>
 
+<!-- Cabeçalho da página -->
 <header>
     <div class="container">
         <div class="topbar">
             <a href="home.php" class="logo" style="text-decoration: none; color: #0b6e4f; display:inline-flex; align-items:center; gap:8px;"> 
-                <img src="../images/logo_labinsmile.png" alt="LabInSmile" style="height:30px; width:auto; border-radius:8px; object-fit:cover"> LabInSmile
+                <img src="../images/logo_labinsmile.png" alt="Lab in Smile" style="height:30px; width:auto; border-radius:8px; object-fit:cover"> Lab in Smile
             </a>
 
             <div class="top-right">
-                
                 <nav>
                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                         <a href="admin.php" class="btn-gestao" style="color: #0b6e4f; font-weight: bold;">Gestão</a>
@@ -279,7 +273,6 @@ $service_tags_map = get_service_tags_map($conn);
                         <a href="registo.php" class="btn-login">Registar</a>
                     <?php endif; ?>
                 </div>
-
             </div>
         </div>
     </div>
@@ -292,6 +285,7 @@ $service_tags_map = get_service_tags_map($conn);
             <button type="button" id="filter-toggle" class="filter-toggle" aria-expanded="false" aria-controls="filters-panel">Filtros</button>
         </div>
 
+        <!-- Painel de filtros -->
         <div id="filters-panel" class="filters-panel">
             <p class="filters-title">Categorias</p>
             <div class="filter-tags" id="filter-tags">
@@ -302,67 +296,53 @@ $service_tags_map = get_service_tags_map($conn);
             </div>
         </div>
         
+        <!-- Grelha de serviços -->
         <div class="services-grid">
-
         <?php
         $sql = "SELECT * FROM services ORDER BY id ASC";
         $result = $conn->query($sql);
 
         if ($result && $result->num_rows > 0) {
-
             while ($row = $result->fetch_assoc()) {
                 $images = service_images($row['imagem'] ?? '');
                 $row_tags = $service_tags_map[(int)$row['id']] ?? [];
                 $tag_ids = implode(',', array_column($row_tags, 'id'));
                 $tag_names = implode(' ', array_column($row_tags, 'nome'));
         ?>
-
             <a href="servico.php?id=<?= $row['id'] ?>" class="service-link" data-title="<?= htmlspecialchars($row['nome'], ENT_QUOTES) ?>" data-description="<?= htmlspecialchars($row['descricao'] ?? '', ENT_QUOTES) ?>" data-tags="<?= htmlspecialchars($tag_ids, ENT_QUOTES) ?>" data-tag-names="<?= htmlspecialchars($tag_names, ENT_QUOTES) ?>" style="text-decoration:none; color:inherit;">
-    <div class="service-card">
-
-        <?php if (!empty($images)): ?>
-            <img src="/LabInSmile/images/<?= htmlspecialchars($images[0]) ?>" alt="<?= htmlspecialchars($row['nome']) ?>">
-        <?php endif; ?>
-        <h3><?= htmlspecialchars($row['nome']) ?></h3>
-        <!-- service tags are kept in data attributes for filtering but not displayed here -->
-    </div>
-</a>
-
+                <div class="service-card">
+                    <?php if (!empty($images)): ?>
+                        <img src="/LabInSmile/images/<?= htmlspecialchars($images[0]) ?>" alt="<?= htmlspecialchars($row['nome']) ?>">
+                    <?php endif; ?>
+                    <h3><?= htmlspecialchars($row['nome']) ?></h3>
+                </div>
+            </a>
         <?php
             }
-
         } else {
             echo "<p>Sem serviços disponíveis.</p>";
         }
         ?>
-
         </div>
-        <p id="no-services-filtered" class="no-services-filtered">Nenhum servi&ccedil;o corresponde aos filtros escolhidos.</p>
+        <p id="no-services-filtered" class="no-services-filtered">Nenhum serviço corresponde aos filtros escolhidos.</p>
     </div>
 </main>
 
 <footer>
     <div class="container">
-        <strong>LabInSmile - Próteses Dentárias</strong>
+        <strong>Lab in Smile - Próteses Dentárias</strong>
         <p>Telefone: +351 967 544 606</p>
         <p>Email: labinsmile@gmail.com</p>
         <p>Morada: Avenida da República, Nº 74 1.º Andar Sala 1 Paredes</p>
     </div>
 </footer>
 
-<a
-    href="https://wa.me/351967544606?text=Olá,%20gostaria%20de%20obter%20mais%20informações."
-    class="whatsapp-float"
-    target="_blank"
->
-
-    <img
-        src="/LabInSmile/images/whatsapp.png"
-        alt="WhatsApp"
-    >
-
+<a href="https://wa.me/351967544606?text=Olá,%20gostaria%20de%20obter%20mais%20informações." class="whatsapp-float" target="_blank">
+    <img src="/LabInSmile/images/whatsapp.png" alt="WhatsApp">
 </a>
+
 <script>
+// Script de filtragem
 ;(function(){
     const toggle = document.getElementById('filter-toggle');
     const panel = document.getElementById('filters-panel');
@@ -373,7 +353,6 @@ $service_tags_map = get_service_tags_map($conn);
 
     function applyFilters() {
         let visibleCount = 0;
-
         cards.forEach(card => {
             const cardTags = new Set((card.dataset.tags || '').split(',').filter(Boolean));
             const matchesTags = activeTags.size === 0 || Array.from(activeTags).every(tag => cardTags.has(tag));
@@ -381,7 +360,6 @@ $service_tags_map = get_service_tags_map($conn);
             card.style.display = visible ? '' : 'none';
             if (visible) visibleCount += 1;
         });
-
         if (empty) {
             empty.style.display = visibleCount === 0 && cards.length > 0 ? 'block' : 'none';
         }
@@ -422,3 +400,4 @@ $service_tags_map = get_service_tags_map($conn);
 </script>
 </body>
 </html>
+

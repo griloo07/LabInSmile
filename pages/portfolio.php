@@ -1,21 +1,22 @@
 <?php
+// Iniciar a sessão
 session_start();
 require_once __DIR__ . '/../config.php';
 
+// Obter imagens portfólio
 function portfolio_images($value) {
     $value = trim((string)$value);
     if ($value === '') {
         return [];
     }
-
     $decoded = json_decode($value, true);
     if (is_array($decoded)) {
         return array_values(array_filter($decoded, 'is_string'));
     }
-
     return [$value];
 }
 
+// Configurar tabela portfólio
 function ensure_portfolio_table($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS portfolio (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -26,8 +27,10 @@ function ensure_portfolio_table($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
+// Inicializar tabela
 ensure_portfolio_table($conn);
 
+// Obter itens portfólio
 $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
 ?>
 <!DOCTYPE html>
@@ -35,13 +38,13 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
-    <title>Portfólio - LabInSmile</title>
+    <title>Portfólio - Lab in Smile</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
+        /* Estilos do portfólio */
         main { padding: 36px 12px; min-height: calc(100vh - 260px); }
         .container { max-width:1100px; margin:0 auto; }
 
-        /* Portfolio layout: Flex container with wrap, center-aligned. */
         .portfolio-grid {
             display:flex;
             flex-wrap:wrap;
@@ -50,7 +53,6 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
             align-items:stretch;
         }
 
-        /* Each card is a vertical column, centered internally. Three cards per row on desktop. */
         .portfolio-card {
             background:#fff;
             border-radius:12px;
@@ -58,7 +60,7 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
             box-shadow:0 6px 20px rgba(16,24,40,0.06);
             text-decoration:none;
             color:inherit;
-            flex: 0 0 calc((100% - 48px) / 3); /* 3 cards per row with 24px gaps */
+            flex: 0 0 calc((100% - 48px) / 3);
             max-width:360px;
             display:flex;
             align-items:center;
@@ -66,7 +68,6 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
             box-sizing:border-box;
         }
 
-        /* Inner column layout: icon -> title -> button */
         .card-inner {
             display:flex;
             flex-direction:column;
@@ -84,7 +85,6 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
         .card-btn { display:inline-block; padding:8px 20px; border-radius:999px; background:var(--primary); color:#fff; text-decoration:none; font-weight:700; }
         .card-btn:hover { background:var(--primary-700); }
 
-        /* Modal for "Ver Mais" — larger, grid layout with thumbnails */
         .portfolio-modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999; padding:28px; }
         .portfolio-modal.open { display:flex; }
         .pm-backdrop { position:absolute; inset:0; background:rgba(2,6,23,0.56); backdrop-filter: blur(2px); }
@@ -120,7 +120,6 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
 
         .manage-link { display:inline-block; margin-bottom:12px; padding:8px 12px; background:#0b6e4f; color:#fff; border-radius:8px; text-decoration:none }
 
-        /* Responsiveness: 2 columns on medium screens, 1 column on small screens */
         @media (max-width: 900px) {
             .portfolio-card { flex: 0 0 calc((100% - 24px) / 2); }
         }
@@ -144,6 +143,7 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
             <?php endif; ?>
         </div>
 
+        <!-- Grelha de itens -->
         <div class="portfolio-grid">
             <?php if ($result && $result->num_rows > 0): ?>
                 <?php while ($row = $result->fetch_assoc()): ?>
@@ -165,10 +165,9 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
                     </div>
                 <?php endwhile; ?>
             <?php else: ?>
-                <p>Sem exemplos no portefólio por enquanto.</p>
+                <p>Sem exemplos no portfólio por enquanto.</p>
             <?php endif; ?>
         </div>
-    </div>
     </div>
 </main>
 
@@ -176,3 +175,4 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
 
 </body>
 </html>
+

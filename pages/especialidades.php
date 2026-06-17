@@ -1,4 +1,5 @@
 <?php
+// Iniciar a sessão
 session_start();
 require_once __DIR__ . '/../config.php';
 ?>
@@ -7,9 +8,10 @@ require_once __DIR__ . '/../config.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
-    <title>Especialidades - LabInSmile</title>
+    <title>Especialidades - Lab in Smile</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
+        /* Estilos das especialidades */
         * { box-sizing: border-box; }
         body {
             margin: 0;
@@ -58,7 +60,6 @@ require_once __DIR__ . '/../config.php';
             background: #eef2f5;
             color: #0b6e4f;
         }
-        /* Auth button styles moved to global style.css for consistent subtle design */
         main {
             min-height: calc(100vh - 280px);
             padding: 40px 15px;
@@ -147,6 +148,7 @@ require_once __DIR__ . '/../config.php';
     <div class="container">
         <h1>Nossas Especialidades</h1>
         
+        <!-- Especialidades do laboratório -->
         <div class="expertise-grid">
             <div class="expertise-card">
                 <h3>🖥️ CAD/CAM</h3>
@@ -178,8 +180,6 @@ require_once __DIR__ . '/../config.php';
                 <p class="description">Investimento em pesquisa e desenvolvimento de técnicas e materiais inovadores para melhores resultados.</p>
             </div>
         </div>
-
-    </div>
     </div>
 </main>
 
@@ -187,3 +187,4 @@ require_once __DIR__ . '/../config.php';
 
 </body>
 </html>
+

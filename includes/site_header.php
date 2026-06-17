@@ -1,7 +1,7 @@
 <?php
-// Shared header (logo, nav, auth buttons). Expects session already started.
+// Cabeçalho da página
 
-// Construir parâmetro `next` para o link de login com a página atual, evitando loop para a própria página de login
+// Definir redirecionamento login
 $__current_uri = $_SERVER['REQUEST_URI'] ?? '';
 $__login_next = '';
 if ($__current_uri && strpos($__current_uri, '/login.php') === false) {
@@ -12,7 +12,7 @@ if ($__current_uri && strpos($__current_uri, '/login.php') === false) {
     <div class="container">
         <div class="topbar">
             <a href="home.php" class="logo" style="text-decoration: none; color: var(--primary); display:flex; align-items:center; gap:8px;"> 
-                <img src="/LabInSmile/images/logo_labinsmile.png" alt="LabInSmile" style="height:30px; width:auto; border-radius:8px; object-fit:cover"> LabInSmile
+                <img src="/LabInSmile/images/logo_labinsmile.png" alt="Lab in Smile" style="height:30px; width:auto; border-radius:8px; object-fit:cover"> Lab in Smile
             </a>
 
             <div class="top-right">
@@ -23,8 +23,7 @@ if ($__current_uri && strpos($__current_uri, '/login.php') === false) {
                     <a href="contacto.php">Contacto</a>
                 </nav>
 
-                <!-- header CTAs removed per user request -->
-
+                <!-- Mostrar botões autenticação -->
                 <div class="auth-buttons">
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <span class="user-info">Olá, <?= htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']) ?></span>
@@ -41,7 +40,9 @@ if ($__current_uri && strpos($__current_uri, '/login.php') === false) {
         </div>
     </div>
 </header>
+
 <style>
+/* Estilos do cabeçalho */
 header nav a,
 header .auth-buttons a,
 header .auth-buttons .btn-login,
@@ -52,5 +53,5 @@ header .auth-buttons .btn-admin {
     font-weight: 700 !important;
     text-decoration: none !important;
 }
-/* header CTAs removed — no extra header buttons */
 </style>
+

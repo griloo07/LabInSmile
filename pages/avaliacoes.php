@@ -1,11 +1,14 @@
 <?php
+// Iniciar a sessão
 session_start();
 require_once __DIR__ . '/../config.php';
 
+// Gerar token CSRF
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
 }
 
+// Configurar tabela avaliações
 function ensure_avaliacoes_table($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS avaliacoes (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -17,6 +20,7 @@ function ensure_avaliacoes_table($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
+// Inicializar a tabela
 ensure_avaliacoes_table($conn);
 
 $errors = [];
@@ -25,6 +29,7 @@ $nome = '';
 $classificacao = 0;
 $observacoes = '';
 
+// Processar submissão POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = $_POST['csrf_token'] ?? '';
     if (!$token || !hash_equals($_SESSION['csrf_token'], $token)) {
@@ -34,16 +39,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $classificacao = intval($_POST['classificacao'] ?? 0);
         $observacoes = trim((string)($_POST['observacoes'] ?? ''));
 
+        // Validar dados recebidos
         if ($nome === '') $errors[] = 'Indique o seu nome.';
         if ($classificacao < 1 || $classificacao > 5) $errors[] = 'Escolha uma classificação entre 1 e 5 estrelas.';
 
         if (empty($errors)) {
             $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            
+            // Gravar a avaliação
             $stmt = $conn->prepare('INSERT INTO avaliacoes (nome, classificacao, observacoes, ip) VALUES (?, ?, ?, ?)');
             $stmt->bind_param('siss', $nome, $classificacao, $observacoes, $ip);
             if ($stmt->execute()) {
                 $success = 'Obrigado pela sua avaliação!';
-                // reset form values
                 $nome = '';
                 $classificacao = 0;
                 $observacoes = '';
@@ -54,16 +61,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
 ?>
 <!doctype html>
 <html lang="pt-PT">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Deixe uma Avaliação — LabInSmile</title>
+    <title>Deixe uma Avaliação — Lab in Smile</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
+        /* Estilos da avaliação */
         .review-page { padding: 36px 16px; }
         .review-card { max-width:760px; margin: 18px auto; background:var(--surface); padding:22px; border-radius:12px; box-shadow:var(--shadow-sm); }
         .stars { display:flex; gap:6px; align-items:center }
@@ -77,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
 <main class="review-page">
+    <!-- Formulário de avaliação -->
     <div class="review-card">
         <h2>Deixe a sua avaliação</h2>
 
@@ -120,7 +128,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </main>
 
+<?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
+
 <script>
+// Script de classificação
 (() => {
     const stars = Array.from(document.querySelectorAll('#stars .star'));
     const input = document.getElementById('classificacao');
@@ -151,3 +162,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </body>
 </html>
+

@@ -1,49 +1,44 @@
 <?php
-// Configuracao de ligacao a base de dados MySQL.
-
+// Configuração base dados
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'laboratorio');
 define('DB_PORT', 3306);
 
+// Ligar base dados
 $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
 
+// Validar a ligação
 if ($conn->connect_error) {
     die('Erro ao ligar a base de dados: ' . $conn->connect_error);
 }
 
+// Definir o charset
 $conn->set_charset('utf8mb4');
 
-// Email do laboratório (destino para notificações de formulários)
+// Email de destino
 define('LAB_EMAIL', 'labinsmile@gmail.com');
 
-// Carrega o autoload do Composer se existir (PHPMailer, etc.)
+// Carregar autoload Composer
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
 }
 
-// SMTP opcional: descomente e preencha para ativar envio via SMTP
-// define('SMTP_HOST', 'smtp.exemplo.com');
-// define('SMTP_USER', 'utilizador@exemplo.com');
-// define('SMTP_PASS', 'senha');
-// define('SMTP_PORT', 587);
-// define('SMTP_SECURE', 'tls'); // 'tls' ou 'ssl'
-
-/**
- * Envia via SMTP sem depender de bibliotecas externas (suporte TLS/SSL).
- * Retorna true em caso de sucesso, false caso contrário.
- */
+// Enviar email SMTP
 function send_smtp($host, $port, $username, $password, $from, $to, $subject, $body, $secure = 'tls') {
     $timeout = 30;
     $remote = ($secure === 'ssl') ? 'ssl://' . $host : $host;
     $context = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+    
+    // Abrir socket rede
     $fp = @stream_socket_client($remote . ':' . $port, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $context);
     if (!$fp) {
         error_log("SMTP connect failed: {$errno} {$errstr}");
         return false;
     }
 
+    // Obter resposta SMTP
     $get = function() use ($fp) {
         $data = '';
         while ($str = fgets($fp, 515)) {
@@ -52,17 +47,22 @@ function send_smtp($host, $port, $username, $password, $from, $to, $subject, $bo
         }
         return $data;
     };
+
+    // Enviar comando SMTP
     $send = function($cmd) use ($fp) {
         fwrite($fp, $cmd . "\r\n");
     };
 
+    // Validar handshake inicial
     $res = $get();
     if (strpos($res, '220') !== 0) { fclose($fp); error_log('SMTP handshake failed: ' . $res); return false; }
 
+    // Enviar comando EHLO
     $hostname = gethostname() ?: 'localhost';
     $send('EHLO ' . $hostname);
     $res = $get();
 
+    // Iniciar ligação TLS
     if ($secure === 'tls') {
         $send('STARTTLS');
         $res = $get();
@@ -70,11 +70,11 @@ function send_smtp($host, $port, $username, $password, $from, $to, $subject, $bo
         if (!@stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
             fclose($fp); error_log('Unable to enable TLS on SMTP socket'); return false;
         }
-        // re-ehlo after STARTTLS
         $send('EHLO ' . $hostname);
         $res = $get();
     }
 
+    // Autenticar no SMTP
     if ($username) {
         $send('AUTH LOGIN');
         $res = $get();
@@ -85,21 +85,27 @@ function send_smtp($host, $port, $username, $password, $from, $to, $subject, $bo
         if (strpos($res, '235') !== 0) { fclose($fp); error_log('SMTP auth failed: ' . $res); return false; }
     }
 
+    // Definir remetente
     $send('MAIL FROM:<' . $from . '>');
     $res = $get();
     if (strpos($res, '250') !== 0) { fclose($fp); error_log('MAIL FROM failed: ' . $res); return false; }
 
+    // Definir destinatário
     $send('RCPT TO:<' . $to . '>');
     $res = $get();
     if (strpos($res, '250') !== 0 && strpos($res, '251') !== 0) { fclose($fp); error_log('RCPT TO failed: ' . $res); return false; }
 
+    // Enviar dados email
     $send('DATA');
     $res = $get();
     if (strpos($res, '354') !== 0) { fclose($fp); error_log('DATA command failed: ' . $res); return false; }
 
+    // Enviar cabeçalhos corpo
     $headers = "From: {$from}\r\nReply-To: {$from}\r\nTo: {$to}\r\nSubject: {$subject}\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n";
     $send($headers . $body . "\r\n.");
     $res = $get();
+    
+    // Fechar ligação SMTP
     $send('QUIT');
     fclose($fp);
     if (strpos($res, '250') === 0) return true;
@@ -107,20 +113,18 @@ function send_smtp($host, $port, $username, $password, $from, $to, $subject, $bo
     return false;
 }
 
-/**
- * Envia um email para o endereço do laboratório.
- * Retorna true em caso de sucesso, false caso contrário.
- */
+// Notificar o laboratório
 function send_lab_email($subject, $body, $from_email = null) {
     $to = LAB_EMAIL;
     $from = $from_email ? $from_email : 'no-reply@' . ($_SERVER['SERVER_NAME'] ?? 'localhost');
-    // If PHPMailer is installed (recommended), use it (supports SMTP with auth)
+    
+    // Enviar com PHPMailer
     if (class_exists('\\PHPMailer\\PHPMailer\\PHPMailer')) {
         try {
             $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
             $mail->CharSet = 'UTF-8';
 
-            // If SMTP settings are defined in config, use SMTP transport
+            // Configurar envio SMTP
             if (defined('SMTP_HOST') && SMTP_HOST) {
                 $mail->isSMTP();
                 $mail->Host = SMTP_HOST;
@@ -135,7 +139,8 @@ function send_lab_email($subject, $body, $from_email = null) {
                 $mail->Port = defined('SMTP_PORT') ? SMTP_PORT : 587;
             }
 
-            $mail->setFrom($from, 'LabInSmile');
+            // Configurar detalhes mensagem
+            $mail->setFrom($from, 'Lab in Smile');
             $mail->addAddress($to);
             $mail->addReplyTo($from);
             $mail->Subject = $subject;
@@ -145,11 +150,10 @@ function send_lab_email($subject, $body, $from_email = null) {
             return $mail->send();
         } catch (\PHPMailer\PHPMailer\Exception $e) {
             error_log('PHPMailer error: ' . ($mail->ErrorInfo ?? $e->getMessage()));
-            // fallthrough to other methods
         }
     }
 
-    // If SMTP is configured and PHPMailer unavailable, try native SMTP implementation
+    // Envio SMTP nativo
     if (defined('SMTP_HOST') && SMTP_HOST) {
         $smtp_user = defined('SMTP_USER') ? constant('SMTP_USER') : null;
         $smtp_pass = defined('SMTP_PASS') ? constant('SMTP_PASS') : null;
@@ -160,7 +164,7 @@ function send_lab_email($subject, $body, $from_email = null) {
         error_log('Native SMTP fallback failed for ' . SMTP_HOST);
     }
 
-    // Fallback to PHP mail()
+    // Usar função nativa
     if (function_exists('mail')) {
         $headers = "From: {$from}\r\nReply-To: {$from}\r\nMIME-Version: 1.0\r\nContent-type: text/plain; charset=UTF-8\r\n";
         $ok = mail($to, $subject, $body, $headers);
@@ -170,7 +174,7 @@ function send_lab_email($subject, $body, $from_email = null) {
         return $ok;
     }
 
-    // Last resort: log the email to a file for inspection
+    // Gravar em ficheiro
     $logdir = __DIR__ . '/emails';
     if (!is_dir($logdir)) @mkdir($logdir, 0755, true);
     $filename = $logdir . '/email_' . date('Ymd_His') . '.txt';

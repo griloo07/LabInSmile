@@ -1,7 +1,9 @@
 <?php
+// Iniciar a sessão
 session_start();
 require_once __DIR__ . '/../config.php';
 
+// Gerar token CSRF
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
 }
@@ -9,6 +11,7 @@ if (!isset($_SESSION['csrf_token'])) {
 $errors = [];
 $success_message = '';
 
+// Processar envio contacto
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'contact') {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $errors[] = 'Falha de segurança. Atualize a página e tente novamente.';
@@ -20,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
         if ($assunto === '') $assunto = 'Pedido de Orçamento';
         $mensagem  = trim($_POST['mensagem'] ?? '');
 
+        // Validar dados formulário
         if (strlen($nome) < 2) $errors[] = 'Indique o seu nome.';
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Email inválido.';
         if (strlen($mensagem) < 10) $errors[] = 'A mensagem deve ter pelo menos 10 caracteres.';
@@ -27,6 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
         if (empty($errors)) {
             $body = "Nome: $nome\nEmail: $email\nTelefone: $telefone\nAssunto: $assunto\n\nMensagem:\n$mensagem";
             $mail_ok = false;
+            
+            // Enviar email notificações
             if (function_exists('send_lab_email')) {
                 $mail_ok = send_lab_email($assunto, $body, $email);
             } elseif (function_exists('mail')) {
@@ -35,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
                 $mail_ok = @mail($to, $assunto, $body, $headers);
             }
 
+            // Guardar na base
             $stmt = $conn->prepare('INSERT INTO contacts (name, email, phone, subject, message) VALUES (?, ?, ?, ?, ?)');
             $stmt->bind_param('sssss', $nome, $email, $telefone, $assunto, $mensagem);
             
@@ -55,9 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
-    <title>Contacto - LabInSmile</title>
+    <title>Contacto - Lab in Smile</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
+        /* Estilos do contacto */
         * { box-sizing: border-box; }
         body {
             margin: 0;
@@ -106,7 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
             background: #eef2f5;
             color: #0b6e4f;
         }
-        /* Auth button styles moved to global style.css for consistent subtle design */
         main {
             min-height: calc(100vh - 280px);
             padding: 40px 15px;
@@ -239,6 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
     <div class="container">
         <h1>Contacto</h1>
         
+        <!-- Formulário de contacto -->
         <div class="contact-grid">
             <div class="contact-info">
                 <h3>Informações de Contacto</h3>
@@ -307,6 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
             </div>
         </div>
 
+        <!-- Mapa de localização -->
         <div class="map-container">
             <h3>Localização</h3>
             <iframe
@@ -320,10 +329,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'co
             </iframe>
         </div>
     </div>
-    </div>
 </main>
 
 <?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
 
 </body>
 </html>
+

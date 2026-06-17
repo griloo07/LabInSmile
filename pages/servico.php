@@ -1,7 +1,9 @@
 <?php
+// Iniciar sessão
 session_start();
 require_once __DIR__ . '/../config.php';
 
+// Validar sessão ativa
 if (!isset($_SESSION['user_id'])) {
     $redirect = 'servicos.php';
     if (isset($_GET['id'])) {
@@ -12,16 +14,19 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// Criar token CSRF
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
 }
 
+// Validar ID recebido
 if (!isset($_GET['id'])) {
     die("Serviço não encontrado.");
 }
 
 $id = intval($_GET['id']);
 
+// Obter dados serviço
 $sql = "SELECT * FROM services WHERE id = $id";
 $result = $conn->query($sql);
 
@@ -31,6 +36,7 @@ if (!$result || $result->num_rows == 0) {
 
 $servico = $result->fetch_assoc();
 
+// Função imagens serviço
 function service_images($value) {
     $value = trim((string)$value);
     if ($value === '') {
@@ -50,6 +56,7 @@ $service_images = service_images($servico['imagem'] ?? '');
 $mensagem_sucesso = "";
 $errors = [];
 
+// Processar formulário POST
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $nome = trim($_POST['nome'] ?? '');
@@ -59,6 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $data_marcacao = $_POST['data_marcacao'] ?? '';
     $hora_marcacao = $_POST['hora_marcacao'] ?? '';
 
+    // Validar dados contacto
     if (strlen($nome) < 2) $errors[] = 'Indique o seu nome.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Email inválido.';
     if (strlen($mensagem) < 5) $errors[] = 'A mensagem é demasiado curta.';
@@ -66,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (empty($errors)) {
 
-        // verificar conflito
+        // Verificar conflitos agendamento
         $check = $conn->prepare("\n            SELECT id FROM pedidos \n            WHERE data_marcacao = ? AND hora_marcacao = ?\n        ");
 
         $check->bind_param("ss", $data_marcacao, $hora_marcacao);
@@ -79,6 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         } else {
 
+            // Inserir novo agendamento
             $stmt = $conn->prepare("\n                INSERT INTO pedidos \n                (service_id, nome, email, telefone, mensagem, data_marcacao, hora_marcacao)\n                VALUES (?, ?, ?, ?, ?, ?, ?)\n            ");
 
             $stmt->bind_param(
@@ -95,7 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($stmt->execute()) {
                 $mensagem_sucesso = "Marcação feita com sucesso!";
 
-                // Notificar laboratório por email sobre o novo pedido/agendamento
+                // Notificar laboratório email
                 $subject = "Pedido de Orçamento / Agendamento: " . (isset($servico['nome']) ? $servico['nome'] : 'Serviço');
                 $body_mail = "Serviço: " . (isset($servico['nome']) ? $servico['nome'] : '') . "\n";
                 $body_mail .= "Nome: $nome\nEmail: $email\nTelefone: $telefone\nMensagem: $mensagem\nData: $data_marcacao\nHora: $hora_marcacao\n";
@@ -117,6 +126,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
+// Preparar variáveis formulário
 $old_nome = htmlspecialchars($nome ?? '');
 $old_email = htmlspecialchars($email ?? '');
 $old_telefone = htmlspecialchars($telefone ?? '');
@@ -133,6 +143,7 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
 
 <style>
+/* Estilos da página */
 .product-grid {
     display:grid;
     grid-template-columns:1fr 420px;
@@ -410,6 +421,7 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 
 <div class="product-grid">
 
+    <!-- Detalhe do serviço -->
     <div class="service-detail">
         <?php if (count($service_images) > 1): ?>
             <div class="service-carousel" data-carousel>
@@ -435,6 +447,7 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
         <p><?= nl2br(htmlspecialchars($servico['descricao'])) ?></p>
     </div>
 
+    <!-- Painel de marcação -->
     <aside class="quote-panel">
 
         <h3>Pedido de Orçamento</h3>
@@ -511,7 +524,7 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 </main>
 
 <script>
-// Back button behavior: prefer referrer to avoid returning to an empty form
+// Configurar botão voltar
 ;(function(){
     const btnVoltar = document.getElementById('btn-voltar');
     if (!btnVoltar) return;
@@ -526,6 +539,7 @@ $old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
     });
 })();
 
+// Inicializar carrossel
 document.querySelectorAll('[data-carousel]').forEach(carousel => {
     const track = carousel.querySelector('.service-carousel-track');
     const slides = carousel.querySelectorAll('.service-carousel-slide');
@@ -557,6 +571,7 @@ function setScheduleStatus(message) {
     if (scheduleStatus) scheduleStatus.textContent = message;
 }
 
+// Carregar horários disponíveis
 if (dataInput) {
     const loadHorarios = function () {
         let data = this.value;
@@ -566,7 +581,7 @@ if (dataInput) {
 
         if (!data) {
             horaSelect.innerHTML = '<option value="">Escolha uma data</option>';
-            setScheduleStatus('Escolha uma data para ver os horarios disponiveis.');
+            setScheduleStatus('Escolha uma data para ver os horários disponíveis.');
             return;
         }
 
@@ -574,13 +589,13 @@ if (dataInput) {
         let dia = new Date(partes[0], partes[1] - 1, partes[2]).getDay();
 
         if (dia === 0 || dia === 6) {
-            horaSelect.innerHTML = '<option value="">Clinica encerrada ao fim de semana</option>';
-            setScheduleStatus('Escolha um dia util para continuar.');
+            horaSelect.innerHTML = '<option value="">Clínica encerrada ao fim de semana</option>';
+            setScheduleStatus('Escolha um dia útil para continuar.');
             return;
         }
 
-        horaSelect.innerHTML = '<option value="">A carregar horarios...</option>';
-        setScheduleStatus('A procurar horarios disponiveis...');
+        horaSelect.innerHTML = '<option value="">A carregar horários...</option>';
+        setScheduleStatus('A procurar horários disponíveis...');
 
         fetch('/LabInSmile/pages/get_horarios.php?data=' + data)
         .then(res => res.json())
@@ -588,8 +603,8 @@ if (dataInput) {
             horaSelect.innerHTML = '';
 
             if (horarios.length === 0) {
-                horaSelect.innerHTML = '<option value="">Sem horarios disponiveis</option>';
-                setScheduleStatus('Nao existem horarios livres para esta data.');
+                horaSelect.innerHTML = '<option value="">Sem horários disponíveis</option>';
+                setScheduleStatus('Não existem horários livres para esta data.');
                 return;
             }
 
@@ -604,7 +619,7 @@ if (dataInput) {
                     opt.textContent = item.hora + ' (Ocupado)';
                     opt.disabled = true;
                 } else {
-                    opt.textContent = item.hora + ' (Disponivel)';
+                    opt.textContent = item.hora + ' (Disponível)';
                     livres++;
                 }
 
@@ -613,12 +628,12 @@ if (dataInput) {
             });
 
             horaSelect.disabled = livres === 0;
-            setScheduleStatus(livres > 0 ? livres + ' horario(s) disponivel(eis) para esta data.' : 'Nao existem horarios livres para esta data.');
+            setScheduleStatus(livres > 0 ? livres + ' horário(s) disponível(eis) para esta data.' : 'Não existem horários livres para esta data.');
         })
         .catch(err => {
             console.error(err);
-            horaSelect.innerHTML = '<option value="">Erro ao carregar horarios</option>';
-            setScheduleStatus('Nao foi possivel carregar os horarios. Tente novamente.');
+            horaSelect.innerHTML = '<option value="">Erro ao carregar horários</option>';
+            setScheduleStatus('Não foi possível carregar os horários. Tente novamente.');
         });
     };
 

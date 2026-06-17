@@ -311,11 +311,29 @@ $result = $conn->query('SELECT * FROM portfolio ORDER BY id DESC');
             const btn = e.target.closest('.remove-image');
             if (!btn) return;
             const filename = btn.dataset.filename;
-            const images = parseImages(formImagem.value);
-            const idx = images.indexOf(filename);
-            if (idx !== -1) images.splice(idx, 1);
-            storeImages(formImagem, images);
-            renderPreview(preview, images);
+            if (!filename) return;
+            // Confirm permanent deletion from server
+            if (!confirm('Eliminar esta imagem permanentemente? Esta ação não pode ser desfeita.')) return;
+            const tokenEl = document.querySelector('input[name="csrf_token"]');
+            const token = tokenEl ? tokenEl.value : '';
+            const fd = new FormData();
+            fd.append('csrf_token', token);
+            fd.append('filename', filename);
+            if (uploadStatus) uploadStatus.textContent = 'A remover imagem...';
+            fetch('delete_image.php', { method: 'POST', body: fd, headers: {'X-Requested-With':'XMLHttpRequest'} })
+            .then(r => r.json()).then(json => {
+                if (json.success) {
+                    const images = parseImages(formImagem.value);
+                    const idx = images.indexOf(filename);
+                    if (idx !== -1) images.splice(idx, 1);
+                    storeImages(formImagem, images);
+                    renderPreview(preview, images);
+                    if (uploadStatus) uploadStatus.textContent = json.message || 'Imagem eliminada.';
+                } else {
+                    alert(json.message || 'Erro ao eliminar imagem.');
+                    if (uploadStatus) uploadStatus.textContent = '';
+                }
+            }).catch(err => { console.error(err); alert('Erro de rede ao eliminar imagem.'); if (uploadStatus) uploadStatus.textContent = ''; });
         });
     }
 
