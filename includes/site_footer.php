@@ -12,7 +12,9 @@
                 <img src="/LabInSmile/images/icone facebook.png" alt="Facebook Lab in Smile" class="social-icon">
             </a>
         </p>
-        <p class="copyright">© <?php echo date('Y'); ?> Lab in Smile. Todos os direitos reservados.</p>
+<div class="footer-buttons" style="margin-top:20px; display:flex; justify-content:center;">
+    <a href="https://www.livroreclamacoes.pt/Inicio/" style="color:#fff; background:none; padding:0.5rem 1rem; border:1px solid #fff; border-radius:4px; text-decoration:none;" title="Livro de Reclamações">Livro de Reclamações</a>
+</div>
     </div>
 </footer>
 

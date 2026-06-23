@@ -1,0 +1,79 @@
+/* Global CSS variables for brand colors */
+:root {
+  --primary-color: #0b6e4f;
+  --bg-color: #f7f9fb;
+  --text-color: #212529;
+  --font-family: 'Outfit', sans-serif;
+}
+
+/* Reset and base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-family);
+}
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Glassmorphism container */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Header navigation */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+}
+nav a {
+  margin: 0 0.8rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  position: relative;
+}
+nav a::after {
+  content: '';
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  left: 0;
+  bottom: -4px;
+  background: var(--primary-color);
+  transition: width 0.3s ease;
+}
+nav a:hover::after { width: 100%; }
+
+/* Primary button */
+.btn-primary {
+  display: inline-block;
+  background: var(--primary-color);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  header { flex-direction: column; }
+  nav a { margin: 0.5rem; }
+}

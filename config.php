@@ -1,10 +1,15 @@
 <?php
+// Carregar configurações locais se existirem (para evitar envio de credenciais ao GitHub)
+if (file_exists(__DIR__ . '/config.local.php')) {
+    include_once __DIR__ . '/config.local.php';
+}
+
 // Configuração base dados
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'laboratorio');
-define('DB_PORT', 3306);
+if (!defined('DB_HOST')) define('DB_HOST', 'localhost');
+if (!defined('DB_USER')) define('DB_USER', 'root');
+if (!defined('DB_PASS')) define('DB_PASS', '');
+if (!defined('DB_NAME')) define('DB_NAME', 'laboratorio');
+if (!defined('DB_PORT')) define('DB_PORT', 3306);
 
 // Ligar base dados
 $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
@@ -18,7 +23,11 @@ if ($conn->connect_error) {
 $conn->set_charset('utf8mb4');
 
 // Email de destino
-define('LAB_EMAIL', 'labinsmile@gmail.com');
+if (!defined('LAB_EMAIL')) define('LAB_EMAIL', 'labinsmile@gmail.com');
+
+// Brevo API Config (Chaves devem ser colocadas em config.local.php)
+if (!defined('BREVO_API_KEY')) define('BREVO_API_KEY', '');
+if (!defined('BREVO_SENDER_EMAIL')) define('BREVO_SENDER_EMAIL', 'gabrielsnogueira07@gmail.com');
 
 // Carregar autoload Composer
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
@@ -113,8 +122,90 @@ function send_smtp($host, $port, $username, $password, $from, $to, $subject, $bo
     return false;
 }
 
-// Notificar o laboratório
-function send_lab_email($subject, $body, $from_email = null) {
+// Função auxiliar para enviar via Brevo API
+function send_email_via_brevo($to_email, $to_name, $subject, $body, $reply_to_email = null, $reply_to_name = null) {
+    if (!defined('BREVO_API_KEY') || !BREVO_API_KEY) {
+        return false;
+    }
+    
+    $url = 'https://api.brevo.com/v3/smtp/email';
+    $data = [
+        'sender' => [
+            'name' => 'Lab in Smile',
+            'email' => BREVO_SENDER_EMAIL
+        ],
+        'to' => [
+            [
+                'email' => $to_email,
+                'name' => $to_name ?: $to_email
+            ]
+        ],
+        'subject' => $subject,
+        'textContent' => $body
+    ];
+
+    if ($reply_to_email) {
+        $data['replyTo'] = [
+            'email' => $reply_to_email,
+            'name' => $reply_to_name ?: $reply_to_email
+        ];
+    }
+
+    $ch = curl_init($url);
+    if (!$ch) {
+        error_log('Failed to initialize cURL context.');
+        return false;
+    }
+
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'accept: application/json',
+        'api-key: ' . BREVO_API_KEY,
+        'content-type: application/json'
+    ]);
+
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($http_code >= 200 && $http_code < 300) {
+        return true;
+    } else {
+        error_log("Brevo API error. HTTP Code: {$http_code}. Response: {$response}");
+        return false;
+    }
+}
+
+// Notificar o laboratório e enviar confirmação ao cliente
+function send_lab_email($subject, $body, $from_email = null, $from_name = null) {
+    // Tentar enviar via Brevo primeiro
+    if (defined('BREVO_API_KEY') && BREVO_API_KEY !== '') {
+        $lab_ok = send_email_via_brevo(LAB_EMAIL, 'Lab in Smile', $subject, $body, $from_email, $from_name);
+        
+        if ($from_email) {
+            $cust_subject = "Confirmação de Receção: " . $subject;
+            $cust_name = $from_name ?: 'Cliente';
+            $cust_body = "Olá " . $cust_name . ",\n\n"
+                       . "Agradecemos o seu contacto. Recebemos a sua mensagem com sucesso e responderemos com a maior brevidade.\n\n"
+                       . "Seguem os detalhes do seu pedido:\n"
+                       . "----------------------------------------\n"
+                       . $body . "\n"
+                       . "----------------------------------------\n\n"
+                       . "Com os melhores cumprimentos,\n"
+                       . "Equipa Lab in Smile";
+            send_email_via_brevo($from_email, $cust_name, $cust_subject, $cust_body);
+        }
+        
+        if ($lab_ok) {
+            return true;
+        }
+    }
+
     $to = LAB_EMAIL;
     $from = $from_email ? $from_email : 'no-reply@' . ($_SERVER['SERVER_NAME'] ?? 'localhost');
     
@@ -140,7 +231,7 @@ function send_lab_email($subject, $body, $from_email = null) {
             }
 
             // Configurar detalhes mensagem
-            $mail->setFrom($from, 'Lab in Smile');
+            $mail->setFrom($from, $from_name ?: 'Lab in Smile');
             $mail->addAddress($to);
             $mail->addReplyTo($from);
             $mail->Subject = $subject;

@@ -1,9 +1,7 @@
 <?php
-// Iniciar a sessão
 session_start();
 require_once __DIR__ . '/../config.php';
 
-// Obter imagens portfólio
 function portfolio_images($value) {
     $value = trim((string)$value);
     if ($value === '') return [];
@@ -12,7 +10,6 @@ function portfolio_images($value) {
     return [$value];
 }
 
-// Configurar tabela portfólio
 function ensure_portfolio_table($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS portfolio (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -23,17 +20,14 @@ function ensure_portfolio_table($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
-// Inicializar tabela
 ensure_portfolio_table($conn);
 
-// Obter ID item
 $id = intval($_GET['id'] ?? 0);
 if (!$id) {
     header('Location: portfolio.php');
     exit;
 }
 
-// Carregar dados item
 $stmt = $conn->prepare('SELECT * FROM portfolio WHERE id = ? LIMIT 1');
 $stmt->bind_param('i', $id);
 $stmt->execute();
@@ -50,128 +44,277 @@ $images = portfolio_images($item['imagem'] ?? '');
 $title = $item['titulo'] ?? '';
 $desc = $item['descricao'] ?? '';
 ?>
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title><?= htmlspecialchars($title) ?> — Portfólio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($title) ?> - Portfólio</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
-        /* Estilos do item */
-        body { background:#f6f7f9; }
-        .container { max-width:1200px; margin:0 auto; padding:36px 18px; }
-        .back-link { display:inline-block; margin-bottom:18px; color:var(--primary); text-decoration:none; font-weight:800 }
-
-        .detail-grid {
-            display:grid;
-            grid-template-columns: 1fr 360px;
-            gap:28px;
-            align-items:start;
-            background:#ffffff;
-            border-radius:14px;
-            padding:18px;
-            box-shadow:0 20px 60px rgba(2,6,23,0.06);
+        .portfolio-detail-container {
+            padding: 40px 0;
         }
 
-        .detail-media { background:transparent; border-radius:10px; padding:6px; }
-        .main-wrap { position:relative; }
-        .main-image { width:100%; height:min(78vh,820px); object-fit:contain; display:block; border-radius:12px; background:linear-gradient(180deg,#fbfdfc,#ffffff); box-shadow:0 12px 36px rgba(2,6,23,0.06); }
+        .btn-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            transition: var(--transition-fast);
+        }
 
-        .nav-arrow { position:absolute; top:50%; transform:translateY(-50%); background:rgba(2,6,23,0.6); color:#fff; border:0; width:44px; height:44px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; }
-        .nav-prev { left:12px; }
-        .nav-next { right:12px; }
+        .btn-back-link:hover {
+            color: var(--primary-700);
+            transform: translateX(-2px);
+        }
 
-        .thumbs { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
-        .thumb { width:88px; height:58px; border-radius:8px; overflow:hidden; cursor:pointer; opacity:.7; border:2px solid transparent; box-sizing:border-box; }
-        .thumb img { width:100%; height:100%; object-fit:cover; display:block }
-        .thumb.active { opacity:1; border-color:var(--primary); box-shadow:0 8px 24px rgba(11,110,79,0.08); }
+        .btn-back-link svg {
+            width: 16px;
+            height: 16px;
+        }
 
-        .detail-info { padding:18px; background:transparent; border-radius:6px; }
-        .detail-title { font-size:28px; margin:6px 0 12px; color:var(--primary); text-transform:uppercase; letter-spacing:1px; font-weight:900 }
-        .detail-desc { color:#374151; line-height:1.7; font-size:16px; white-space:pre-wrap }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 36px;
+            align-items: start;
+        }
 
-        @media (max-width:980px) {
-            .detail-grid { grid-template-columns:1fr; padding:14px }
-            .detail-info { order:2 }
-            .detail-media { order:1 }
-            .main-image { height:60vh }
-            .thumb { width:72px; height:48px }
-            .nav-arrow { display:none }
+        /* Gallery Layout */
+        .detail-media-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .main-media-frame {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            aspect-ratio: 4/3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-media-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: 1;
+            transition: opacity 0.25s ease-in-out;
+        }
+
+        .gallery-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: var(--shadow-md);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 1.2rem;
+            transition: var(--transition-fast);
+        }
+
+        .gallery-nav-btn:hover {
+            background: #ffffff;
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .gallery-nav-btn.prev { left: 16px; }
+        .gallery-nav-btn.next { right: 16px; }
+
+        .thumbnail-grid-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 10px;
+        }
+
+        .thumb-btn-card {
+            border: 2px solid transparent;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            cursor: pointer;
+            padding: 0;
+            background: #f1f5f9;
+            transition: var(--transition-fast);
+        }
+
+        .thumb-btn-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .thumb-btn-card:hover {
+            opacity: 0.9;
+        }
+
+        .thumb-btn-card.active {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Description Details Card */
+        .info-detail-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 30px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .info-detail-card h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-detail-card hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 0;
+        }
+
+        .info-detail-card p.description {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        @media (max-width: 900px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
         }
     </style>
 </head>
 <body>
+
 <?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
-<main>
-    <div class="container">
-        <a href="portfolio.php" class="back-link">← Voltar ao Portfólio</a>
+<main class="container portfolio-detail-container">
+    <a href="portfolio.php" class="btn-back-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <span>Voltar ao Portfólio</span>
+    </a>
 
-        <!-- Detalhes do item -->
-        <div class="detail-grid">
-            <div class="detail-media">
-                <div class="main-wrap">
-                    <button id="img-prev" class="nav-arrow nav-prev" aria-label="Imagem anterior">&larr;</button>
-                    <img id="main-image" class="main-image" src="/LabInSmile/images/<?= htmlspecialchars($images[0] ?? '') ?>" alt="<?= htmlspecialchars($title) ?>">
-                    <button id="img-next" class="nav-arrow nav-next" aria-label="Próxima imagem">&rarr;</button>
-                </div>
-                <div id="thumbs" class="thumbs">
-                    <?php foreach ($images as $i => $img): ?>
-                        <button type="button" class="thumb<?= $i === 0 ? ' active' : '' ?>" data-index="<?= $i ?>" aria-label="Ver imagem <?= $i+1 ?>">
+    <div class="detail-grid">
+        <!-- GALLERY LEFT -->
+        <div class="detail-media-wrap">
+            <div class="main-media-frame">
+                <?php if (!empty($images)): ?>
+                    <button type="button" id="img-prev" class="gallery-nav-btn prev" aria-label="Imagem anterior">&#10094;</button>
+                    <img id="main-image" src="/LabInSmile/images/<?= htmlspecialchars($images[0]) ?>" alt="<?= htmlspecialchars($title) ?>">
+                    <button type="button" id="img-next" class="gallery-nav-btn next" aria-label="Próxima imagem">&#10095;</button>
+                <?php else: ?>
+                    <div style="color: var(--muted); font-size: 0.9rem;">Nenhuma imagem carregada</div>
+                <?php endif; ?>
+            </div>
+
+            <?php if (count($images) > 1): ?>
+                <div class="thumbnail-grid-row" id="thumbs-row">
+                    <?php foreach ($images as $idx => $img): ?>
+                        <button type="button" class="thumb-btn-card <?= $idx === 0 ? 'active' : '' ?>" data-index="<?= $idx ?>" aria-label="Ver imagem <?= $idx + 1 ?>">
                             <img src="/LabInSmile/images/<?= htmlspecialchars($img) ?>" alt="">
                         </button>
                     <?php endforeach; ?>
                 </div>
-            </div>
-
-            <aside class="detail-info">
-                <h1 class="detail-title"><?= htmlspecialchars($title) ?></h1>
-                <?php if (trim($desc) !== ''): ?>
-                    <div class="detail-desc"><?= nl2br(htmlspecialchars($desc)) ?></div>
-                <?php endif; ?>
-            </aside>
+            <?php endif; ?>
         </div>
+
+        <!-- INFO CARD RIGHT -->
+        <aside class="info-detail-card">
+            <h1><?= htmlspecialchars($title) ?></h1>
+            <hr>
+            <?php if (trim($desc) !== ''): ?>
+                <p class="description"><?= nl2br(htmlspecialchars($desc)) ?></p>
+            <?php else: ?>
+                <p class="description" style="color: var(--text-muted); font-style: italic;">Sem descrição para este trabalho.</p>
+            <?php endif; ?>
+        </aside>
     </div>
 </main>
 
+<?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
+
 <script>
-// Script de navegação
 (() => {
     const images = <?= json_encode(array_values($images)) ?> || [];
+    if (images.length === 0) return;
+
     let current = 0;
-    const main = document.getElementById('main-image');
-    const thumbs = document.getElementById('thumbs');
+    const mainImg = document.getElementById('main-image');
     const prevBtn = document.getElementById('img-prev');
     const nextBtn = document.getElementById('img-next');
+    const thumbsRow = document.getElementById('thumbs-row');
+    const thumbBtns = thumbsRow ? Array.from(thumbsRow.children) : [];
 
-    function show(index){
-        if(!images.length) return;
+    function showImage(index) {
         current = (index + images.length) % images.length;
-        main.src = '/LabInSmile/images/' + images[current];
-        Array.from(thumbs.children).forEach((b, i) => b.classList.toggle('active', i === current));
+        
+        // Simple fade animation
+        if (mainImg) {
+            mainImg.style.opacity = '0.3';
+            setTimeout(() => {
+                mainImg.src = '/LabInSmile/images/' + images[current];
+                mainImg.style.opacity = '1';
+            }, 100);
+        }
+
+        // Toggle thumb active styles
+        thumbBtns.forEach((btn, i) => {
+            btn.classList.toggle('active', i === current);
+        });
     }
 
-    thumbs.addEventListener('click', (e) => {
-        const btn = e.target.closest('.thumb');
-        if(!btn) return;
-        const idx = parseInt(btn.dataset.index || '0', 10);
-        show(idx);
-    });
+    if (prevBtn) prevBtn.addEventListener('click', (e) => { e.preventDefault(); showImage(current - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', (e) => { e.preventDefault(); showImage(current + 1); });
 
-    if(prevBtn) prevBtn.addEventListener('click', (e) => { e.preventDefault(); show(current - 1); });
-    if(nextBtn) nextBtn.addEventListener('click', (e) => { e.preventDefault(); show(current + 1); });
+    if (thumbsRow) {
+        thumbsRow.addEventListener('click', (e) => {
+            const btn = e.target.closest('.thumb-btn-card');
+            if (!btn) return;
+            const idx = parseInt(btn.dataset.index || '0', 10);
+            showImage(idx);
+        });
+    }
 
-    main.addEventListener('click', () => { show(current + 1); });
-
+    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
-        if(e.key === 'ArrowRight') show(current + 1);
-        if(e.key === 'ArrowLeft') show(current - 1);
-        if(e.key === 'Escape') window.location.href = 'portfolio.php';
+        if (e.key === 'ArrowRight') showImage(current + 1);
+        if (e.key === 'ArrowLeft') showImage(current - 1);
+        if (e.key === 'Escape') window.location.href = 'portfolio.php';
     });
-
-    // Inicializar exibição
-    show(0);
 })();
 </script>
 </body>
