@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/../config.php';
 
+// Validar sessão ativa
 if (!isset($_SESSION['user_id'])) {
     $redirect = 'servicos.php';
     if (isset($_GET['id'])) {
@@ -22,6 +23,7 @@ if (!isset($_GET['id'])) {
 
 $id = intval($_GET['id']);
 
+// Obter dados serviço
 $sql = "SELECT * FROM services WHERE id = $id";
 $result = $conn->query($sql);
 
@@ -33,15 +35,9 @@ $servico = $result->fetch_assoc();
 
 function service_images($value) {
     $value = trim((string)$value);
-    if ($value === '') {
-        return [];
-    }
-
+    if ($value === '') return [];
     $decoded = json_decode($value, true);
-    if (is_array($decoded)) {
-        return array_values(array_filter($decoded, 'is_string'));
-    }
-
+    if (is_array($decoded)) return array_values(array_filter($decoded, 'is_string'));
     return [$value];
 }
 
@@ -51,69 +47,44 @@ $mensagem_sucesso = "";
 $errors = [];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
     $nome = trim($_POST['nome'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $telefone = trim($_POST['telefone'] ?? '');
     $mensagem = trim($_POST['mensagem'] ?? '');
-    $data_marcacao = $_POST['data_marcacao'] ?? '';
-    $hora_marcacao = $_POST['hora_marcacao'] ?? '';
 
     if (strlen($nome) < 2) $errors[] = 'Indique o seu nome.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Email inválido.';
     if (strlen($mensagem) < 5) $errors[] = 'A mensagem é demasiado curta.';
-    if (!$data_marcacao || !$hora_marcacao) $errors[] = 'Escolha data e hora.';
 
     if (empty($errors)) {
+        $null_val = null;
+        $stmt = $conn->prepare("INSERT INTO pedidos (service_id, nome, email, telefone, mensagem, data_marcacao, hora_marcacao) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("issssss", $id, $nome, $email, $telefone, $mensagem, $null_val, $null_val);
 
-        // verificar conflito
-        $check = $conn->prepare("\n            SELECT id FROM pedidos \n            WHERE data_marcacao = ? AND hora_marcacao = ?\n        ");
+        if ($stmt->execute()) {
+            $mensagem_sucesso = "Pedido de orçamento enviado com sucesso!";
+            
+            $subject = "Novo Pedido de Orçamento: " . ($servico['nome'] ?? 'Serviço');
+            $body_mail = "Serviço: " . ($servico['nome'] ?? '') . "\n"
+                       . "Nome: $nome\nEmail: $email\nTelefone: $telefone\nMensagem: $mensagem\n";
 
-        $check->bind_param("ss", $data_marcacao, $hora_marcacao);
-        $check->execute();
-        $res = $check->get_result();
-
-        if ($res->num_rows > 0) {
-
-            $errors[] = "Este horário já está ocupado.";
-
-        } else {
-
-            $stmt = $conn->prepare("\n                INSERT INTO pedidos \n                (service_id, nome, email, telefone, mensagem, data_marcacao, hora_marcacao)\n                VALUES (?, ?, ?, ?, ?, ?, ?)\n            ");
-
-            $stmt->bind_param(
-                "issssss",
-                $id,
-                $nome,
-                $email,
-                $telefone,
-                $mensagem,
-                $data_marcacao,
-                $hora_marcacao
-            );
-
-            if ($stmt->execute()) {
-                $mensagem_sucesso = "Marcação feita com sucesso!";
-
-                // Notificar laboratório por email sobre o novo pedido/agendamento
-                $subject = "Pedido de Orçamento / Agendamento: " . (isset($servico['nome']) ? $servico['nome'] : 'Serviço');
-                $body_mail = "Serviço: " . (isset($servico['nome']) ? $servico['nome'] : '') . "\n";
-                $body_mail .= "Nome: $nome\nEmail: $email\nTelefone: $telefone\nMensagem: $mensagem\nData: $data_marcacao\nHora: $hora_marcacao\n";
-
-                if (function_exists('send_lab_email')) {
-                    $mail_ok = send_lab_email($subject, $body_mail, $email);
-                } elseif (function_exists('mail')) {
-                    $to = defined('LAB_EMAIL') ? LAB_EMAIL : 'labinsmile@gmail.com';
-                    $headers = "From: $email\r\nReply-To: $email\r\nContent-Type: text/plain; charset=UTF-8";
-                    $mail_ok = @mail($to, $subject, $body_mail, $headers);
-                }
-
-            } else {
-                $errors[] = "Erro ao guardar a marcação.";
+            if (function_exists('send_lab_email')) {
+                send_lab_email($subject, $body_mail, $email, $nome);
+            } elseif (function_exists('mail')) {
+                $to = defined('LAB_EMAIL') ? LAB_EMAIL : 'labinsmile@gmail.com';
+                $headers = "From: $email\r\nReply-To: $email\r\nContent-Type: text/plain; charset=UTF-8";
+                @mail($to, $subject, $body_mail, $headers);
             }
 
-            $stmt->close();
+            // Limpar os campos após sucesso
+            $nome = '';
+            $email = '';
+            $telefone = '';
+            $mensagem = '';
+        } else {
+            $errors[] = "Erro ao guardar o seu pedido.";
         }
+        $stmt->close();
     }
 }
 
@@ -121,513 +92,582 @@ $old_nome = htmlspecialchars($nome ?? '');
 $old_email = htmlspecialchars($email ?? '');
 $old_telefone = htmlspecialchars($telefone ?? '');
 $old_mensagem = htmlspecialchars($mensagem ?? '');
-$old_data_marcacao = htmlspecialchars($data_marcacao ?? '');
-$old_hora_marcacao = htmlspecialchars($hora_marcacao ?? '');
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-<meta charset="UTF-8">
-<title><?= htmlspecialchars($servico['nome']) ?></title>
-<?php require_once __DIR__ . '/../includes/site_head.php'; ?>
+    <meta charset="UTF-8">
+    <title><?= htmlspecialchars($servico['nome']) ?> - Lab in Smile</title>
+    <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
+    <style>
+        .service-detail-container {
+            padding: 40px 0;
+        }
 
-<style>
-.product-grid {
-    display:grid;
-    grid-template-columns:1fr 420px;
-    gap:25px;
-    align-items:start;
-}
+        .btn-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            transition: var(--transition-fast);
+        }
 
-.product-image img {
-    width:100%;
-    border-radius:10px;
-}
+        .btn-back-link:hover {
+            color: var(--primary-700);
+            transform: translateX(-2px);
+        }
 
-.service-carousel {
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 12px 30px rgba(16,24,40,0.12);
-    overflow: hidden;
-    position: relative;
-}
+        .btn-back-link svg {
+            width: 16px;
+            height: 16px;
+        }
 
-.service-carousel-track {
-    display: flex;
-    transition: transform .28s ease;
-}
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 36px;
+            align-items: start;
+        }
 
-.service-carousel-slide {
-    flex: 0 0 100%;
-}
+        /* Gallery Carousel */
+        .service-gallery-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-.service-carousel img,
-.service-detail > img {
-    width: 100%;
-    display: block;
-    aspect-ratio: 4 / 3;
-    border-radius: 14px;
-    object-fit: cover;
-}
+        .service-carousel-outer {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
 
-.service-carousel img {
-    border-radius: 0;
-}
+        .carousel-slides-track {
+            display: flex;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-.carousel-control {
-    align-items: center;
-    background: rgba(255,255,255,0.9);
-    border: 0;
-    border-radius: 50%;
-    color: #0b6e4f;
-    cursor: pointer;
-    display: flex;
-    font-size: 26px;
-    height: 42px;
-    justify-content: center;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 42px;
-}
+        .carousel-slide-item {
+            flex: 0 0 100%;
+            aspect-ratio: 4/3;
+            margin: 0;
+        }
 
-.carousel-control.prev {
-    left: 12px;
-}
+        .carousel-slide-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
 
-.carousel-control.next {
-    right: 12px;
-}
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: var(--shadow-sm);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 1.15rem;
+            transition: var(--transition-fast);
+        }
 
-.carousel-dots {
-    bottom: 12px;
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    left: 0;
-    position: absolute;
-    right: 0;
-}
+        .nav-btn:hover {
+            background: #ffffff;
+            transform: translateY(-50%) scale(1.05);
+        }
 
-.carousel-dot {
-    background: rgba(255,255,255,0.7);
-    border: 0;
-    border-radius: 50%;
-    cursor: pointer;
-    height: 10px;
-    padding: 0;
-    width: 10px;
-}
+        .nav-btn.prev { left: 12px; }
+        .nav-btn.next { right: 12px; }
 
-.carousel-dot.active {
-    background: #0b6e4f;
-}
+        .dots-row {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+        }
 
-.service-detail p {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 14px rgba(16,24,40,0.06);
-    margin: 18px 0 0;
-    padding: 18px;
-}
+        .dot-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transition: var(--transition-fast);
+        }
 
-.quote-panel {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    box-shadow: 0 16px 40px rgba(16,24,40,0.10);
-    padding: 22px;
-    position: sticky;
-    top: 92px;
-}
+        .dot-indicator.active {
+            background: #ffffff;
+            width: 18px;
+            border-radius: 4px;
+        }
 
-.quote-panel h3 {
-    color: #0b6e4f;
-    font-size: 22px;
-    line-height: 1.2;
-    margin: 0;
-}
+        .service-description-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 30px;
+            box-shadow: var(--shadow-sm);
+        }
 
-.quote-panel .form-intro {
-    color: #6b7280;
-    font-size: 14px;
-    margin: 8px 0 18px;
-}
+        .service-description-card h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0 0 16px;
+        }
 
-.quote-form {
-    display: grid;
-    gap: 14px;
-}
+        .service-description-card p {
+            color: var(--text-main);
+            line-height: 1.7;
+            font-size: 0.95rem;
+            margin: 0;
+            white-space: pre-wrap;
+        }
 
-.form-section {
-    border: 1px solid #edf0f2;
-    border-radius: 14px;
-    padding: 14px;
-    transition: border-color .18s ease, box-shadow .18s ease;
-}
+        /* Booking / Quote Form Panel */
+        .booking-panel {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-.form-section:focus-within {
-    border-color: rgba(11,110,79,0.35);
-    box-shadow: 0 8px 22px rgba(11,110,79,0.08);
-}
+        .booking-panel h3 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+        }
 
-.form-section-title {
-    color: #0b6e4f;
-    font-size: 13px;
-    font-weight: 800;
-    margin: 0 0 12px;
-    text-transform: uppercase;
-}
+        .booking-panel p.intro {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin: 0;
+            line-height: 1.5;
+        }
 
-.field-group {
-    display: grid;
-    gap: 6px;
-    margin-bottom: 12px;
-}
+        .booking-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-.field-group:last-child {
-    margin-bottom: 0;
-}
+        .form-part-section {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
 
-.field-group label {
-    color: #374151;
-    font-size: 13px;
-    font-weight: 700;
-    margin: 0;
-}
+        .form-part-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--primary);
+            margin: 0 0 4px;
+        }
 
-.quote-form input,
-.quote-form textarea,
-.quote-form select {
-    width: 100%;
-    border: 1px solid #dfe5e9;
-    border-radius: 10px;
-    background: #fbfcfd;
-    color: #111;
-    font: inherit;
-    padding: 11px 12px;
-    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
-}
+        .field-unit {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
 
-.quote-form textarea {
-    min-height: 110px;
-    resize: vertical;
-}
+        .field-unit label {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--text-main);
+        }
 
-.quote-form input:focus,
-.quote-form textarea:focus,
-.quote-form select:focus {
-    background: #fff;
-    border-color: #0b6e4f;
-    box-shadow: 0 0 0 4px rgba(11,110,79,0.10);
-    outline: none;
-}
+        .booking-form input,
+        .booking-form textarea,
+        .booking-form select {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: #ffffff;
+            color: var(--text-main);
+            padding: 10px 12px;
+            font-size: 0.88rem;
+            outline: none;
+            transition: var(--transition-fast);
+        }
 
-.quote-form select:disabled {
-    color: #9ca3af;
-    cursor: not-allowed;
-}
+        .booking-form input:focus,
+        .booking-form textarea:focus,
+        .booking-form select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(11, 110, 79, 0.08);
+        }
 
-.schedule-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
+        .booking-form textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
 
-.form-alert {
-    border-radius: 12px;
-    font-size: 14px;
-    margin: 0 0 14px;
-    padding: 12px 14px;
-}
+        .booking-form select:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
 
-.form-alert.success {
-    background: #dcfce7;
-    border: 1px solid #bbf7d0;
-    color: #047857;
-}
+        .timing-row-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 10px;
+        }
 
-.form-alert.error {
-    background: #fee2e2;
-    border: 1px solid #fecaca;
-    color: #b91c1c;
-}
+        .timing-status-msg {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.4;
+        }
 
-.form-alert ul {
-    margin: 0;
-    padding-left: 18px;
-}
+        .btn-submit-booking {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(11, 110, 79, 0.15);
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
 
-.submit-request {
-    align-items: center;
-    background: #0b6e4f;
-    border: 0;
-    border-radius: 12px;
-    color: #fff;
-    cursor: pointer;
-    display: inline-flex;
-    font-weight: 800;
-    justify-content: center;
-    padding: 13px 18px;
-    transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
-    width: 100%;
-}
+        .btn-submit-booking:hover {
+            background: var(--primary-700);
+            transform: translateY(-1px);
+        }
 
-.submit-request:hover {
-    background: #0a5a41;
-    box-shadow: 0 10px 22px rgba(11,110,79,0.22);
-    transform: translateY(-1px);
-}
+        .booking-alert {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
 
-.schedule-status {
-    color: #6b7280;
-    font-size: 13px;
-    margin: -2px 0 0;
-}
+        .booking-alert.success {
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+            color: #047857;
+        }
 
-@media(max-width:900px){
-    .product-grid{grid-template-columns:1fr;}
-    .quote-panel{position:static;}
-}
+        .booking-alert.error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
 
-@media(max-width:560px){
-    .schedule-grid{grid-template-columns:1fr;}
-}
-</style>
+        .booking-alert ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        @media (max-width: 900px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            .booking-panel {
+                position: static;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .timing-row-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .invalid-field {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
+        .invalid-field:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+        }
+    </style>
 </head>
-
 <body>
 
 <?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
-<main>
-<div class="container">
+<main class="container service-detail-container">
+    <a href="servicos.php" class="btn-back-link" id="btn-voltar">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <span>Voltar aos Serviços</span>
+    </a>
 
-    <div style="margin-bottom:12px;">
-        <a href="/LabInSmile/pages/servicos.php" id="btn-voltar" style="text-decoration:none; display:inline-block; padding:8px 12px; background:#0b6e4f; color:#fff; border-radius:6px;">← Voltar</a>
-    </div>
-
-<div class="product-grid">
-
-    <div class="service-detail">
-        <?php if (count($service_images) > 1): ?>
-            <div class="service-carousel" data-carousel>
-                <div class="service-carousel-track">
-                    <?php foreach ($service_images as $image): ?>
-                        <div class="service-carousel-slide">
-                            <img src="/LabInSmile/images/<?= htmlspecialchars($image) ?>" alt="<?= htmlspecialchars($servico['nome']) ?>">
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <button type="button" class="carousel-control prev" data-carousel-prev aria-label="Imagem anterior">&lsaquo;</button>
-                <button type="button" class="carousel-control next" data-carousel-next aria-label="Imagem seguinte">&rsaquo;</button>
-                <div class="carousel-dots">
-                    <?php foreach ($service_images as $index => $image): ?>
-                        <button type="button" class="carousel-dot<?= $index === 0 ? ' active' : '' ?>" data-carousel-dot="<?= $index ?>" aria-label="Ver imagem <?= $index + 1 ?>"></button>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        <?php elseif (count($service_images) === 1): ?>
-            <img src="/LabInSmile/images/<?= htmlspecialchars($service_images[0]) ?>" alt="<?= htmlspecialchars($servico['nome']) ?>">
-        <?php endif; ?>
-
-        <p><?= nl2br(htmlspecialchars($servico['descricao'])) ?></p>
-    </div>
-
-    <aside class="quote-panel">
-
-        <h3>Pedido de Orçamento</h3>
-        <p class="form-intro">Envie o seu pedido e escolha uma data para agendamento.</p>
-
-        <?php if ($mensagem_sucesso): ?>
-            <p class="form-alert success"><?= htmlspecialchars($mensagem_sucesso) ?></p>
-        <?php endif; ?>
-
-        <?php if (!empty($errors)): ?>
-            <div class="form-alert error">
-            <ul>
-                <?php foreach ($errors as $e): ?>
-                    <li><?= htmlspecialchars($e) ?></li>
-                <?php endforeach; ?>
-            </ul>
-            </div>
-        <?php endif; ?>
-
-        <form method="POST" class="quote-form">
-
-            <div class="form-section">
-                <p class="form-section-title">Dados de contacto</p>
-
-                <div class="field-group">
-                    <label for="nome">Nome</label>
-                    <input type="text" id="nome" name="nome" placeholder="O seu nome" required value="<?= $old_nome ?>">
-                </div>
-
-                <div class="field-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="email@exemplo.pt" required value="<?= $old_email ?>">
-                </div>
-
-                <div class="field-group">
-                    <label for="telefone">Telefone</label>
-                    <input type="text" id="telefone" name="telefone" placeholder="+351 000 000 000" value="<?= $old_telefone ?>">
-                </div>
+    <div class="detail-grid">
+        <!-- DETAIL LEFT -->
+        <div class="service-gallery-wrap">
+            <div class="service-carousel-outer">
+                <?php if (count($service_images) > 1): ?>
+                    <div class="carousel-slides-track" id="gallery-track">
+                        <?php foreach ($service_images as $image): ?>
+                            <div class="carousel-slide-item">
+                                <img src="/LabInSmile/images/<?= htmlspecialchars($image) ?>" alt="<?= htmlspecialchars($servico['nome']) ?>">
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <button type="button" class="nav-btn prev" id="gallery-prev" aria-label="Imagem anterior">&#10094;</button>
+                    <button type="button" class="nav-btn next" id="gallery-next" aria-label="Próxima imagem">&#10095;</button>
+                    <div class="dots-row" id="gallery-dots"></div>
+                <?php elseif (count($service_images) === 1): ?>
+                    <div class="carousel-slide-item">
+                        <img src="/LabInSmile/images/<?= htmlspecialchars($service_images[0]) ?>" alt="<?= htmlspecialchars($servico['nome']) ?>">
+                    </div>
+                <?php else: ?>
+                    <div style="aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; color:#94a3b8; background:#ffffff;">
+                        <svg style="width:48px; height:48px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                <?php endif; ?>
             </div>
 
-            <div class="form-section">
-                <p class="form-section-title">Pedido e agendamento</p>
+            <div class="service-description-card">
+                <h2><?= htmlspecialchars($servico['nome']) ?></h2>
+                <p><?= nl2br(htmlspecialchars($servico['descricao'])) ?></p>
+            </div>
+        </div>
 
-                <div class="field-group">
-                    <label for="mensagem">Mensagem</label>
-                    <textarea id="mensagem" name="mensagem" placeholder="Conte-nos o que precisa"><?= $old_mensagem ?></textarea>
+        <!-- BOOKING PANEL RIGHT -->
+        <aside class="booking-panel">
+            <h3>Pedido de Orçamento</h3>
+            <p class="intro">Insira os seus dados de contacto e envie o seu pedido de orçamento.</p>
+
+            <?php if ($mensagem_sucesso): ?>
+                <div class="booking-alert success"><?= htmlspecialchars($mensagem_sucesso) ?></div>
+            <?php endif; ?>
+
+            <?php if (!empty($errors)): ?>
+                <div class="booking-alert error">
+                    <ul>
+                        <?php foreach ($errors as $e): ?>
+                            <li><?= htmlspecialchars($e) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
                 </div>
+            <?php endif; ?>
 
-                <div class="schedule-grid">
-                    <div class="field-group">
-                        <label for="data_marcacao">Data</label>
-                        <input type="date" id="data_marcacao" name="data_marcacao" min="<?= date('Y-m-d') ?>" required value="<?= $old_data_marcacao ?>">
+            <form method="POST" class="booking-form" novalidate>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+
+                <!-- Secção dados -->
+                <div class="form-part-section">
+                    <span class="form-part-title">Dados Pessoais</span>
+                    
+                    <div class="field-unit">
+                        <label for="nome">Nome Completo</label>
+                        <input type="text" id="nome" name="nome" placeholder="O seu nome" required value="<?= $old_nome ?>">
                     </div>
 
-                    <div class="field-group">
-                        <label for="hora_marcacao">Hora</label>
-                        <select id="hora_marcacao" name="hora_marcacao" required data-selected="<?= $old_hora_marcacao ?>" disabled>
-                            <option value="">Escolha uma data</option>
-                        </select>
+                    <div class="field-unit">
+                        <label for="email">Endereço de Email</label>
+                        <input type="email" id="email" name="email" placeholder="email@clinica.pt" required value="<?= $old_email ?>">
+                    </div>
+
+                    <div class="field-unit">
+                        <label for="telefone">Telemóvel / Telefone</label>
+                        <input type="text" id="telefone" name="telefone" placeholder="Ex: 967544606" value="<?= $old_telefone ?>">
                     </div>
                 </div>
-            </div>
 
-            <p class="schedule-status" id="schedule-status">Escolha uma data para ver os horários disponíveis.</p>
+                <!-- Secção de marcação -->
+                <div class="form-part-section">
+                    <span class="form-part-title">Detalhes do Pedido</span>
 
-            <button type="submit" class="submit-request">Enviar pedido</button>
+                    <div class="field-unit">
+                        <label for="mensagem">Mensagem / Observações</label>
+                        <textarea id="mensagem" name="mensagem" placeholder="Descreva os requisitos técnicos ou detalhes clínicos..." required><?= $old_mensagem ?></textarea>
+                    </div>
+                </div>
 
-        </form>
-
-    </aside>
-
-</div>
-</div>
+                <button type="submit" class="btn-submit-booking">
+                    <svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    <span>Solicitar orçamento</span>
+                </button>
+            </form>
+        </aside>
+    </div>
 </main>
 
+<?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
+
 <script>
-// Back button behavior: prefer referrer to avoid returning to an empty form
-;(function(){
-    const btnVoltar = document.getElementById('btn-voltar');
-    if (!btnVoltar) return;
-    btnVoltar.addEventListener('click', function(e){
+// Handle back button referrer path nicely
+const btnVoltar = document.getElementById('btn-voltar');
+if (btnVoltar) {
+    btnVoltar.addEventListener('click', function(e) {
         e.preventDefault();
         const ref = document.referrer || '';
         if (ref && ref.indexOf('servicos.php') !== -1) {
             window.location.href = ref;
         } else {
-            window.location.href = '/LabInSmile/pages/servicos.php';
+            window.location.href = 'servicos.php';
         }
     });
-})();
+}
 
-document.querySelectorAll('[data-carousel]').forEach(carousel => {
-    const track = carousel.querySelector('.service-carousel-track');
-    const slides = carousel.querySelectorAll('.service-carousel-slide');
-    const dots = carousel.querySelectorAll('[data-carousel-dot]');
-    const prev = carousel.querySelector('[data-carousel-prev]');
-    const next = carousel.querySelector('[data-carousel-next]');
+// Photo Gallery Slider JS
+const track = document.getElementById('gallery-track');
+if (track) {
+    const slides = Array.from(track.children);
+    const prevBtn = document.getElementById('gallery-prev');
+    const nextBtn = document.getElementById('gallery-next');
+    const dotsContainer = document.getElementById('gallery-dots');
     let current = 0;
+
+    slides.forEach((_, idx) => {
+        const dot = document.createElement('button');
+        dot.className = 'dot-indicator';
+        if (idx === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => showSlide(idx));
+        dotsContainer.appendChild(dot);
+    });
+
+    const dots = Array.from(dotsContainer.children);
 
     function showSlide(index) {
         current = (index + slides.length) % slides.length;
         track.style.transform = 'translateX(-' + (current * 100) + '%)';
-        dots.forEach((dot, dotIndex) => dot.classList.toggle('active', dotIndex === current));
+        dots.forEach((dot, dotIdx) => dot.classList.toggle('active', dotIdx === current));
     }
 
-    if (prev && next && slides.length > 1) {
-        prev.addEventListener('click', () => showSlide(current - 1));
-        next.addEventListener('click', () => showSlide(current + 1));
-        dots.forEach(dot => {
-            dot.addEventListener('click', () => showSlide(Number(dot.dataset.carouselDot || 0)));
+    if (prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', () => showSlide(current - 1));
+        nextBtn.addEventListener('click', () => showSlide(current + 1));
+    }
+}
+
+// Form client-side validation
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('.booking-form');
+    
+    function setFieldError(field, isValid, message) {
+        let errorEl = field.parentNode.querySelector('.field-error-text');
+        if (!isValid) {
+            field.classList.add('invalid-field');
+            if (!errorEl) {
+                errorEl = document.createElement('span');
+                errorEl.className = 'field-error-text';
+                errorEl.style.color = '#ef4444';
+                errorEl.style.fontSize = '0.78rem';
+                errorEl.style.fontWeight = '600';
+                errorEl.style.marginTop = '4px';
+                errorEl.style.display = 'block';
+                field.parentNode.appendChild(errorEl);
+            }
+            errorEl.textContent = message;
+        } else {
+            field.classList.remove('invalid-field');
+            if (errorEl) {
+                errorEl.remove();
+            }
+        }
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let hasError = false;
+            const requiredFields = form.querySelectorAll('[required]');
+            
+            requiredFields.forEach(field => {
+                let isValid = true;
+                let errorMsg = '';
+                
+                if (field.value.trim() === '') {
+                    isValid = false;
+                    errorMsg = 'Este campo é de preenchimento obrigatório.';
+                } else if (field.type === 'email') {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(field.value.trim())) {
+                        isValid = false;
+                        errorMsg = 'Introduza um endereço de email válido (exemplo@email.com).';
+                    }
+                } else if (field.id === 'mensagem' && field.value.trim().length < 5) {
+                    isValid = false;
+                    errorMsg = 'A mensagem deve conter pelo menos 5 caracteres.';
+                }
+                
+                setFieldError(field, isValid, errorMsg);
+                if (!isValid) {
+                    hasError = true;
+                }
+            });
+            
+            if (hasError) {
+                e.preventDefault();
+                const firstInvalid = form.querySelector('.invalid-field');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                }
+            }
+        });
+
+        const fields = form.querySelectorAll('input, textarea');
+        fields.forEach(field => {
+            field.addEventListener('input', function() {
+                let isValid = true;
+                let errorMsg = '';
+                
+                if (this.hasAttribute('required') && this.value.trim() === '') {
+                    isValid = false;
+                    errorMsg = 'Este campo é de preenchimento obrigatório.';
+                } else if (this.type === 'email' && this.value.trim() !== '') {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(this.value.trim())) {
+                        isValid = false;
+                        errorMsg = 'Introduza um endereço de email válido (exemplo@email.com).';
+                    }
+                } else if (this.id === 'mensagem' && this.value.trim() !== '' && this.value.trim().length < 5) {
+                    isValid = false;
+                    errorMsg = 'A mensagem deve conter pelo menos 5 caracteres.';
+                }
+
+                setFieldError(this, isValid, errorMsg);
+            });
         });
     }
 });
-
-const dataInput = document.getElementById('data_marcacao');
-const horaSelect = document.getElementById('hora_marcacao');
-const scheduleStatus = document.getElementById('schedule-status');
-
-function setScheduleStatus(message) {
-    if (scheduleStatus) scheduleStatus.textContent = message;
-}
-
-if (dataInput) {
-    const loadHorarios = function () {
-        let data = this.value;
-
-        horaSelect.innerHTML = '';
-        horaSelect.disabled = true;
-
-        if (!data) {
-            horaSelect.innerHTML = '<option value="">Escolha uma data</option>';
-            setScheduleStatus('Escolha uma data para ver os horarios disponiveis.');
-            return;
-        }
-
-        const partes = data.split('-').map(Number);
-        let dia = new Date(partes[0], partes[1] - 1, partes[2]).getDay();
-
-        if (dia === 0 || dia === 6) {
-            horaSelect.innerHTML = '<option value="">Clinica encerrada ao fim de semana</option>';
-            setScheduleStatus('Escolha um dia util para continuar.');
-            return;
-        }
-
-        horaSelect.innerHTML = '<option value="">A carregar horarios...</option>';
-        setScheduleStatus('A procurar horarios disponiveis...');
-
-        fetch('/LabInSmile/pages/get_horarios.php?data=' + data)
-        .then(res => res.json())
-        .then(horarios => {
-            horaSelect.innerHTML = '';
-
-            if (horarios.length === 0) {
-                horaSelect.innerHTML = '<option value="">Sem horarios disponiveis</option>';
-                setScheduleStatus('Nao existem horarios livres para esta data.');
-                return;
-            }
-
-            const selectedHora = horaSelect.dataset.selected || '';
-            let livres = 0;
-
-            horarios.forEach(item => {
-                let opt = document.createElement('option');
-                opt.value = item.hora;
-
-                if (item.ocupado) {
-                    opt.textContent = item.hora + ' (Ocupado)';
-                    opt.disabled = true;
-                } else {
-                    opt.textContent = item.hora + ' (Disponivel)';
-                    livres++;
-                }
-
-                if (item.hora === selectedHora) opt.selected = true;
-                horaSelect.appendChild(opt);
-            });
-
-            horaSelect.disabled = livres === 0;
-            setScheduleStatus(livres > 0 ? livres + ' horario(s) disponivel(eis) para esta data.' : 'Nao existem horarios livres para esta data.');
-        })
-        .catch(err => {
-            console.error(err);
-            horaSelect.innerHTML = '<option value="">Erro ao carregar horarios</option>';
-            setScheduleStatus('Nao foi possivel carregar os horarios. Tente novamente.');
-        });
-    };
-
-    dataInput.addEventListener('change', loadHorarios);
-    if (dataInput.value) dataInput.dispatchEvent(new Event('change'));
-}
 </script>
-
-<?php require_once __DIR__ . '/../includes/site_footer.php'; ?>
-
 </body>
 </html>

@@ -1,56 +1,67 @@
 <?php
-// Shared header (logo, nav, auth buttons). Expects session already started.
+// Cabeçalho da página
 
-// Construir parâmetro `next` para o link de login com a página atual, evitando loop para a própria página de login
+// Definir redirecionamento login
 $__current_uri = $_SERVER['REQUEST_URI'] ?? '';
 $__login_next = '';
 if ($__current_uri && strpos($__current_uri, '/login.php') === false) {
     $__login_next = '?next=' . urlencode($__current_uri);
 }
 ?>
-<header>
-    <div class="container">
-        <div class="topbar">
-            <a href="home.php" class="logo" style="text-decoration: none; color: var(--primary); display:flex; align-items:center; gap:8px;"> 
-                <img src="/LabInSmile/images/logo_labinsmile.png" alt="LabInSmile" style="height:30px; width:auto; border-radius:8px; object-fit:cover"> LabInSmile
-            </a>
+<header class="main-site-header">
+    <div class="container header-container">
+        <a href="home.php" class="logo"> 
+            <img src="/LabInSmile/images/logo_labinsmile.png" alt="Lab in Smile Logo"> 
+            <span>Lab in Smile</span>
+        </a>
 
-            <div class="top-right">
-                <nav id="main-nav">
-                    <a href="servicos.php">Serviços</a>
-                    <a href="portfolio.php">Portfolio</a>
-                    <a href="especialidades.php">Especialidades</a>
-                    <a href="contacto.php">Contacto</a>
-                </nav>
+        <!-- Hamburger Menu Button for Mobile -->
+        <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Abrir Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
 
-                <!-- header CTAs removed per user request -->
+        <div class="top-right" id="nav-menu">
+            <nav id="main-nav">
+                <a href="home.php" class="nav-link">Início</a>
+                <a href="servicos.php" class="nav-link">Serviços</a>
+                <a href="portfolio.php" class="nav-link">Portfólio</a>
+                <a href="especialidades.php" class="nav-link">Especialidades</a>
+                <a href="about.php" class="nav-link">Sobre Nós</a>
+                <a href="contacto.php" class="nav-link nav-contact-btn">Contacto</a>
+            </nav>
 
-                <div class="auth-buttons">
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <span class="user-info">Olá, <?= htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']) ?></span>
+            <!-- Mostrar botões autenticação -->
+            <div class="auth-buttons">
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <div class="user-profile-badge">
+                        <span class="user-info">Olá, <strong><?= htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']) ?></strong></span>
                         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                            <a href="manage_users.php" class="btn-login btn-admin">Gerir Utilizadores</a>
+                            <a href="admin.php" class="btn-admin-panel">Painel Admin</a>
                         <?php endif; ?>
-                        <a href="logout.php" class="btn-login">Sair</a>
-                    <?php else: ?>
-                        <a href="login.php<?= htmlspecialchars($__login_next, ENT_QUOTES) ?>" class="btn-login">Login</a>
-                        <a href="registo.php" class="btn-login">Registar</a>
-                    <?php endif; ?>
-                </div>
+                        <a href="logout.php" class="btn-logout-link">Sair</a>
+                    </div>
+                <?php else: ?>
+                    <a href="login.php<?= htmlspecialchars($__login_next, ENT_QUOTES) ?>" class="btn-login-action">Entrar</a>
+                    <a href="registo.php" class="btn-register-action">Registar</a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </header>
-<style>
-header nav a,
-header .auth-buttons a,
-header .auth-buttons .btn-login,
-header .auth-buttons .btn-admin {
-    color: var(--primary) !important;
-    background: transparent !important;
-    border: 0 !important;
-    font-weight: 700 !important;
-    text-decoration: none !important;
-}
-/* header CTAs removed — no extra header buttons */
-</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('mobile-nav-toggle');
+    const menu = document.getElementById('nav-menu');
+    
+    if (toggle && menu) {
+        toggle.addEventListener('click', () => {
+            toggle.classList.toggle('active');
+            menu.classList.toggle('active');
+        });
+    }
+});
+</script>
+

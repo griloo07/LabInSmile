@@ -4,15 +4,9 @@ require_once __DIR__ . '/../config.php';
 
 function portfolio_images($value) {
     $value = trim((string)$value);
-    if ($value === '') {
-        return [];
-    }
-
+    if ($value === '') return [];
     $decoded = json_decode($value, true);
-    if (is_array($decoded)) {
-        return array_values(array_filter($decoded, 'is_string'));
-    }
-
+    if (is_array($decoded)) return array_values(array_filter($decoded, 'is_string'));
     return [$value];
 }
 
@@ -27,107 +21,164 @@ function ensure_portfolio_table($conn) {
 }
 
 ensure_portfolio_table($conn);
-
 $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
 ?>
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=5.0">
-    <title>Portfólio - LabInSmile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfólio de Trabalhos - Lab in Smile</title>
     <?php require_once __DIR__ . '/../includes/site_head.php'; ?>
     <style>
-        main { padding: 36px 12px; min-height: calc(100vh - 260px); }
-        .container { max-width:1100px; margin:0 auto; }
-
-        /* Portfolio layout: Flex container with wrap, center-aligned. */
-        .portfolio-grid {
-            display:flex;
-            flex-wrap:wrap;
-            gap:24px;
-            justify-content:center;
-            align-items:stretch;
+        .portfolio-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
         }
 
-        /* Each card is a vertical column, centered internally. Three cards per row on desktop. */
-        .portfolio-card {
-            background:#fff;
-            border-radius:12px;
-            padding:20px;
-            box-shadow:0 6px 20px rgba(16,24,40,0.06);
-            text-decoration:none;
-            color:inherit;
-            flex: 0 0 calc((100% - 48px) / 3); /* 3 cards per row with 24px gaps */
-            max-width:360px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            box-sizing:border-box;
+        .portfolio-header-row h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
         }
 
-        /* Inner column layout: icon -> title -> button */
-        .card-inner {
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            text-align:center;
-            gap:14px;
-            width:100%;
+        .btn-admin-manage {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid rgba(11, 110, 79, 0.1);
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: var(--transition-fast);
         }
 
-        .card-icon img { width:96px; height:96px; border-radius:50%; object-fit:cover; display:block; }
-        .card-icon-placeholder { width:96px; height:96px; border-radius:50%; background:#eef8f4; color:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:28px; }
-
-        .card-title { color:var(--primary); font-size:15px; margin:0; font-weight:800; text-transform:uppercase; letter-spacing:2px; }
-
-        .card-btn { display:inline-block; padding:8px 20px; border-radius:999px; background:var(--primary); color:#fff; text-decoration:none; font-weight:700; }
-        .card-btn:hover { background:var(--primary-700); }
-
-        /* Modal for "Ver Mais" — larger, grid layout with thumbnails */
-        .portfolio-modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999; padding:28px; }
-        .portfolio-modal.open { display:flex; }
-        .pm-backdrop { position:absolute; inset:0; background:rgba(2,6,23,0.56); backdrop-filter: blur(2px); }
-        .pm-dialog { position:relative; z-index:2; max-width:1100px; width:100%; background:#ffffff; border-radius:14px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,0.45); display:grid; grid-template-columns:1fr 360px; gap:20px; align-items:start; transform:translateY(6px) scale(.99); opacity:0; transition:opacity .25s ease, transform .25s ease; }
-        .portfolio-modal.open .pm-dialog { transform:translateY(0) scale(1); opacity:1; }
-        .pm-close { position:absolute; top:12px; right:14px; background:transparent; border:0; font-size:26px; line-height:1; color:#374151; cursor:pointer; padding:6px; border-radius:6px; }
-
-        .pm-left { display:flex; flex-direction:column; gap:12px; }
-        .pm-carousel { position:relative; overflow:hidden; border-radius:10px; background:#f8faf9; min-height:360px; display:flex; align-items:center; justify-content:center; }
-        .pm-carousel img { max-width:100%; max-height:60vh; object-fit:contain; display:block; border-radius:8px; box-shadow: 0 10px 30px rgba(2,6,23,0.12); transition:opacity .28s ease; }
-        .pm-thumbs { display:flex; gap:8px; margin-top:10px; justify-content:center; flex-wrap:wrap; }
-        .pm-thumb { width:72px; height:52px; border-radius:8px; overflow:hidden; cursor:pointer; opacity:.6; border:2px solid transparent; box-sizing:border-box; }
-        .pm-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-        .pm-thumb.active { opacity:1; border-color:var(--primary); box-shadow:0 6px 18px rgba(11,110,79,0.12); }
-
-        .pm-right { padding:6px 8px; }
-        .pm-title { color:var(--primary); font-weight:900; font-size:20px; margin:0 0 6px; text-transform:uppercase; letter-spacing:1px; }
-        .pm-desc { color:#374151; font-size:15px; margin-bottom:12px; line-height:1.45; }
-        .pm-actions { display:flex; gap:8px; margin-top:12px; align-items:center; }
-
-        .pm-nav { position:absolute; top:50%; transform:translateY(-50%); background:rgba(11,110,79,0.95); color:#fff; border:0; padding:8px 12px; border-radius:8px; cursor:pointer; box-shadow:0 8px 24px rgba(11,110,79,0.12); }
-        .pm-prev { left:12px; }
-        .pm-next { right:12px; }
-
-        @media (max-width:900px) {
-            .pm-dialog { grid-template-columns:1fr; padding:12px; }
-            .pm-right { order:2; }
-            .pm-left { order:1; }
-            .pm-carousel { min-height:240px; }
-            .pm-thumbs { justify-content:flex-start; overflow:auto; padding-bottom:4px; }
-            .pm-nav { display:none; }
+        .btn-admin-manage:hover {
+            background: var(--primary);
+            color: #ffffff;
         }
 
-        .manage-link { display:inline-block; margin-bottom:12px; padding:8px 12px; background:#0b6e4f; color:#fff; border-radius:8px; text-decoration:none }
-
-        /* Responsiveness: 2 columns on medium screens, 1 column on small screens */
-        @media (max-width: 900px) {
-            .portfolio-card { flex: 0 0 calc((100% - 24px) / 2); }
+        .portfolio-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
         }
 
-        @media (max-width: 520px) {
-            .portfolio-card { flex: 0 0 100%; }
-            .portfolio-card { max-width: 100%; }
+        .portfolio-gallery-card {
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition-normal);
+        }
+
+        .portfolio-gallery-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(11, 110, 79, 0.15);
+        }
+
+        .portfolio-media-box {
+            height: 220px;
+            background: #f1f5f9;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .portfolio-media-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: var(--transition-normal);
+        }
+
+        .portfolio-gallery-card:hover .portfolio-media-box img {
+            transform: scale(1.04);
+        }
+
+        .no-photo-badge {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            background: var(--bg);
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .portfolio-photo-count {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(15, 23, 42, 0.75);
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            backdrop-filter: blur(4px);
+        }
+
+        .portfolio-info-box {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+        }
+
+        .portfolio-info-box h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .btn-view-item-detail {
+            display: inline-block;
+            background: var(--primary);
+            color: #ffffff;
+            padding: 8px 22px;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: var(--transition-fast);
+            margin-top: auto;
+        }
+
+        .portfolio-gallery-card:hover .btn-view-item-detail {
+            background: var(--primary-700);
+            box-shadow: 0 4px 10px rgba(11, 110, 79, 0.15);
+        }
+
+        @media (max-width: 600px) {
+            .portfolio-header-row {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .btn-admin-manage {
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -135,40 +186,40 @@ $result = $conn->query("SELECT * FROM portfolio ORDER BY id DESC");
 
 <?php require_once __DIR__ . '/../includes/site_header.php'; ?>
 
-<main>
-    <div class="container">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;">
-            <h1>Portfólio</h1>
-            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                <a href="manage_portfolio.php" class="manage-link">Painel Portfolio</a>
-            <?php endif; ?>
-        </div>
-
-        <div class="portfolio-grid">
-            <?php if ($result && $result->num_rows > 0): ?>
-                <?php while ($row = $result->fetch_assoc()): ?>
-                    <?php $images = portfolio_images($row['imagem'] ?? ''); ?>
-                    <div class="portfolio-card" data-id="<?= intval($row['id']) ?>" data-titulo="<?= htmlspecialchars($row['titulo'], ENT_QUOTES) ?>" data-imagem="<?= htmlspecialchars($row['imagem'] ?? '', ENT_QUOTES) ?>" data-descricao="<?= htmlspecialchars($row['descricao'] ?? '', ENT_QUOTES) ?>">
-                        <div class="card-inner">
-                            <div class="card-icon">
-                                <?php if (!empty($images)): ?>
-                                    <img src="/LabInSmile/images/<?= htmlspecialchars($images[0]) ?>" alt="<?= htmlspecialchars($row['titulo']) ?>">
-                                <?php else: ?>
-                                    <div class="card-icon-placeholder"><?= htmlspecialchars(strtoupper(substr($row['titulo'], 0, 1))) ?></div>
-                                <?php endif; ?>
-                            </div>
-
-                            <h3 class="card-title"><?= htmlspecialchars($row['titulo']) ?></h3>
-
-                            <a href="portfolio_item.php?id=<?= intval($row['id']) ?>" class="card-btn" aria-label="Ver mais sobre <?= htmlspecialchars($row['titulo']) ?>">Ver Mais</a>
-                        </div>
-                    </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <p>Sem exemplos no portefólio por enquanto.</p>
-            <?php endif; ?>
-        </div>
+<main class="container" style="padding-top: 40px;">
+    <div class="portfolio-header-row">
+        <h1>O Nosso Portfólio</h1>
+        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+            <a href="manage_portfolio.php" class="btn-admin-manage">Gerir Portfólio</a>
+        <?php endif; ?>
     </div>
+
+    <div class="portfolio-cards-grid">
+        <?php if ($result && $result->num_rows > 0): ?>
+            <?php while ($row = $result->fetch_assoc()): ?>
+                <?php $images = portfolio_images($row['imagem'] ?? ''); ?>
+                <a href="portfolio_item.php?id=<?= intval($row['id']) ?>" class="portfolio-gallery-card">
+                    <div class="portfolio-media-box">
+                        <?php if (!empty($images)): ?>
+                            <img src="/LabInSmile/images/<?= htmlspecialchars($images[0]) ?>" alt="<?= htmlspecialchars($row['titulo']) ?>" loading="lazy">
+                            <?php if (count($images) > 1): ?>
+                                <span class="portfolio-photo-count"><?= count($images) ?> Fotos</span>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <div class="no-photo-badge"><?= htmlspecialchars(strtoupper(substr($row['titulo'], 0, 1))) ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="portfolio-info-box">
+                        <h3><?= htmlspecialchars($row['titulo']) ?></h3>
+                        <span class="btn-view-item-detail">Ver Detalhes</span>
+                    </div>
+                </a>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--muted); border: 1px dashed var(--border-color); border-radius: var(--radius-md);">
+                <p>Nenhum exemplo disponível no portfólio de momento.</p>
+            </div>
+        <?php endif; ?>
     </div>
 </main>
 
